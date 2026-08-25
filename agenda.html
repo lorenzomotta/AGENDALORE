@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="it">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#1f6b5a" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <title>Agenda · AgendaLore</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="css/agenda.css" />
+  </head>
+  <body>
+    <header class="testata">
+      <div>
+        <p class="brand">AgendaLore</p>
+        <p id="email-utente" class="email-utente">...</p>
+      </div>
+      <button id="bottone-esci" class="bottone-secondario" type="button">Esci</button>
+    </header>
+
+    <main class="contenuto">
+      <section class="filtri" aria-label="Filtro date">
+        <label class="campo-data">
+          <span>Giorno</span>
+          <input id="filtro-data" type="date" />
+        </label>
+        <button id="bottone-oggi" class="bottone-secondario" type="button">Oggi</button>
+        <button id="bottone-tutti" class="bottone-secondario" type="button">Tutti</button>
+      </section>
+
+      <p id="stato" class="stato" role="status">Caricamento...</p>
+      <ul id="lista-appuntamenti" class="lista"></ul>
+    </main>
+
+    <button id="bottone-nuovo" class="fab" type="button" aria-label="Nuovo appuntamento">
+      +
+    </button>
+
+    <dialog id="dialogo" class="dialogo">
+      <form id="form-appuntamento" method="dialog">
+        <h2 id="titolo-dialogo">Nuovo appuntamento</h2>
+
+        <input id="id-appuntamento" type="hidden" />
+
+        <label class="campo">
+          <span>Titolo</span>
+          <input id="titolo" name="titolo" type="text" required maxlength="80" placeholder="Es. Dentista" />
+        </label>
+
+        <label class="campo">
+          <span>Data</span>
+          <input id="data" name="data" type="date" required />
+        </label>
+
+        <label class="campo">
+          <span>Ora (facoltativa)</span>
+          <input id="ora" name="ora" type="time" />
+        </label>
+
+        <label class="campo">
+          <span>Note (facoltative)</span>
+          <textarea id="note" name="note" rows="3" maxlength="300" placeholder="Dettagli utili"></textarea>
+        </label>
+
+        <p id="errore-form" class="messaggio errore" hidden></p>
+
+        <div class="azioni-dialogo">
+          <button id="bottone-annulla" class="bottone-secondario" type="button">Annulla</button>
+          <button id="bottone-salva" class="bottone-principale" type="submit">Salva</button>
+        </div>
+      </form>
+    </dialog>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/config.js"></script>
+    <script src="js/supabase-client.js"></script>
+    <script src="js/agenda.js"></script>
+  </body>
+</html>

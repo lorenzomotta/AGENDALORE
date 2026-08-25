@@ -1,0 +1,229 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  font-family: "Source Sans 3", "Segoe UI", sans-serif;
+  color: #1c241f;
+  background: #f4f1ea;
+  min-height: 100dvh;
+  padding-bottom: calc(88px + env(safe-area-inset-bottom));
+}
+
+.testata {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: calc(14px + env(safe-area-inset-top)) 16px 14px;
+  background: #1f6b5a;
+  color: #fff;
+}
+
+.brand {
+  margin: 0;
+  font-weight: 700;
+  font-size: 1.15rem;
+}
+
+.email-utente {
+  margin: 2px 0 0;
+  font-size: 0.85rem;
+  opacity: 0.86;
+  word-break: break-all;
+}
+
+.contenuto {
+  padding: 16px;
+}
+
+.filtri {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 8px;
+  align-items: end;
+  margin-bottom: 16px;
+}
+
+.campo-data {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.campo-data input,
+.campo input,
+.campo textarea {
+  width: 100%;
+  border: 1px solid #d5d0c6;
+  background: #fff;
+  border-radius: 12px;
+  padding: 12px;
+  font: inherit;
+  font-weight: 400;
+  min-height: 46px;
+}
+
+.campo textarea {
+  min-height: 90px;
+  resize: vertical;
+}
+
+.stato {
+  margin: 0 0 12px;
+  color: #5b665f;
+}
+
+.lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.card-appuntamento {
+  background: #fff;
+  border-radius: 16px;
+  padding: 14px;
+  box-shadow: 0 8px 20px rgba(28, 36, 31, 0.06);
+}
+
+.card-appuntamento h2 {
+  margin: 0 0 6px;
+  font-size: 1.1rem;
+}
+
+.meta {
+  margin: 0;
+  color: #5b665f;
+  font-size: 0.92rem;
+}
+
+.note {
+  margin: 8px 0 0;
+  color: #334039;
+}
+
+.azioni {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.bottone-principale,
+.bottone-secondario,
+.bottone-pericolo {
+  border: 0;
+  border-radius: 12px;
+  min-height: 44px;
+  padding: 0 14px;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.bottone-principale {
+  background: #1f6b5a;
+  color: #fff;
+}
+
+.bottone-secondario {
+  background: rgba(255, 255, 255, 0.16);
+  color: inherit;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+}
+
+.contenuto .bottone-secondario,
+.dialogo .bottone-secondario {
+  background: #ece7dd;
+  color: #1c241f;
+  border: 0;
+}
+
+.bottone-pericolo {
+  background: #fde8e4;
+  color: #8a2b16;
+}
+
+.fab {
+  position: fixed;
+  right: 18px;
+  bottom: calc(18px + env(safe-area-inset-bottom));
+  width: 58px;
+  height: 58px;
+  border: 0;
+  border-radius: 50%;
+  background: #e07a3d;
+  color: #fff;
+  font-size: 2rem;
+  line-height: 1;
+  box-shadow: 0 10px 24px rgba(224, 122, 61, 0.4);
+  cursor: pointer;
+}
+
+.dialogo {
+  width: min(100% - 24px, 420px);
+  border: 0;
+  border-radius: 20px;
+  padding: 20px;
+  background: #f7f4ee;
+}
+
+.dialogo::backdrop {
+  background: rgba(20, 32, 28, 0.45);
+}
+
+.dialogo h2 {
+  margin: 0 0 16px;
+}
+
+.campo {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 12px;
+  font-size: 0.92rem;
+  font-weight: 600;
+}
+
+.messaggio {
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 0.92rem;
+}
+
+.messaggio.errore {
+  background: #fde8e4;
+  color: #8a2b16;
+}
+
+.azioni-dialogo {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.vuoto {
+  background: #fff;
+  border-radius: 16px;
+  padding: 28px 16px;
+  text-align: center;
+  color: #5b665f;
+}
