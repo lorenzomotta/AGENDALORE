@@ -22,6 +22,8 @@ create table if not exists public.appuntamenti (
   "TipoAppuntamento" text not null default '',
   "Telefono" text not null default '',
   email text not null default '',
+  "Importo" numeric,
+  "StatoPagamento" text,
   created_at timestamptz not null default now()
 );
 

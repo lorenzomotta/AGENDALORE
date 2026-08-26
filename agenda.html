@@ -3,6 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta http-equiv="Cache-Control" content="no-store" />
     <meta name="theme-color" content="#1e4d28" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <title>Agenda · AgendaLore</title>
@@ -12,7 +13,7 @@
       href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="css/agenda.css" />
+    <link rel="stylesheet" href="css/agenda.css?v=pagamento-label" />
   </head>
   <body>
     <header class="barra-superiore">
@@ -26,8 +27,14 @@
 
     <p class="riga-utente">
       <span id="email-utente">...</span>
-      <a class="link-dati" href="password.html">Dati</a>
+      <a class="link-dati" id="link-dati" href="dati.html">Dati</a>
     </p>
+    <script>
+      document.getElementById("link-dati").onclick = function () {
+        window.location.href = "dati.html";
+        return false;
+      };
+    </script>
 
     <main class="contenuto">
       <section class="scheda-agenda">
@@ -72,6 +79,14 @@
           <p id="dettaglio-quando"></p>
           <p id="dettaglio-visibilita"></p>
         </div>
+        <p id="riga-dettaglio-importo" class="riga-dettaglio" hidden>
+          <span class="etichetta-dettaglio">Importo:</span>
+          <span id="dettaglio-importo"></span>
+        </p>
+        <p id="riga-dettaglio-stato-pagamento" class="riga-dettaglio" hidden>
+          <span class="etichetta-dettaglio">Stato pagamento:</span>
+          <span id="dettaglio-stato-pagamento"></span>
+        </p>
         <p id="dettaglio-tipo" class="dettaglio-tipo"></p>
         <p class="riga-dettaglio">
           <span class="etichetta-dettaglio">Oggetto:</span>
@@ -99,8 +114,9 @@
         </p>
       </div>
       <div class="dialogo-footer">
-        <div id="dettaglio-azioni" class="azioni-dialogo">
+        <div id="dettaglio-azioni" class="azioni-dialogo azioni-dettaglio">
           <button id="dettaglio-cancella" class="bottone-pericolo" type="button">Cancella</button>
+          <button id="dettaglio-duplica" class="bottone-secondario" type="button">Duplica</button>
           <button id="dettaglio-modifica" class="bottone-principale" type="button">Modifica</button>
         </div>
         <button id="dettaglio-chiudi" class="bottone-secondario bottone-chiudi" type="button">Chiudi</button>
@@ -112,21 +128,48 @@
         <h2 id="titolo-dialogo">Nuovo appuntamento</h2>
         <div class="dialogo-corpo">
           <input id="id-appuntamento" type="hidden" />
-          <label class="campo">
-            <span>Tipo appuntamento</span>
-            <div class="combo">
-              <input
-                id="tipo-appuntamento"
-                name="tipo-appuntamento"
-                type="text"
-                required
-                maxlength="80"
-                autocomplete="off"
-                placeholder="Tocca per scegliere, oppure scrivi un nome nuovo"
-              />
-              <ul id="lista-tipo-appuntamento" class="combo-lista" hidden></ul>
+          <div class="campo riga-tipo-pagamento">
+            <div class="riga-etichette-tipo">
+              <label for="tipo-appuntamento">Tipo appuntamento</label>
+              <label for="pagamento">Pagamento</label>
             </div>
-          </label>
+            <div class="riga-input-tipo">
+              <div class="combo">
+                <input
+                  id="tipo-appuntamento"
+                  name="tipo-appuntamento"
+                  type="text"
+                  required
+                  maxlength="80"
+                  autocomplete="off"
+                  placeholder="Tocca per scegliere, oppure scrivi un nome nuovo"
+                />
+                <ul id="lista-tipo-appuntamento" class="combo-lista" hidden></ul>
+              </div>
+              <input id="pagamento" name="pagamento" type="checkbox" />
+            </div>
+          </div>
+          <div id="blocco-pagamento" hidden>
+            <label class="campo">
+              <span>Importo</span>
+              <input
+                id="importo"
+                name="importo"
+                type="number"
+                step="0.01"
+                min="0"
+                inputmode="decimal"
+                placeholder="Es. 50"
+              />
+            </label>
+            <label class="campo">
+              <span>Stato pagamento</span>
+              <select id="stato-pagamento" name="stato-pagamento">
+                <option value="PAGARE">PAGARE</option>
+                <option value="PAGATO">PAGATO</option>
+              </select>
+            </label>
+          </div>
           <label class="campo">
             <span>Titolo</span>
             <input id="titolo" name="titolo" type="text" required maxlength="80" placeholder="Es. Dentista" />
@@ -169,7 +212,7 @@
           </label>
           <label class="campo">
             <span>Note (facoltative)</span>
-            <textarea id="note" name="note" rows="3" maxlength="300" placeholder="Dettagli utili"></textarea>
+            <textarea id="note" name="note" rows="3" placeholder="Dettagli utili"></textarea>
           </label>
           <label class="campo">
             <span>Telefono (facoltativo)</span>
@@ -213,6 +256,6 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/config.js"></script>
     <script src="js/supabase-client.js"></script>
-    <script src="js/agenda.js"></script>
+    <script src="js/agenda.js?v=pagamento"></script>
   </body>
 </html>

@@ -14,6 +14,8 @@ const messaggio = document.getElementById("messaggio");
 const messaggioRecupero = document.getElementById("messaggio-recupero");
 const bloccoCambio = document.getElementById("blocco-cambio");
 const bloccoRecupero = document.getElementById("blocco-recupero");
+const vediPassword = document.getElementById("vedi-password");
+const vediPasswordRecupero = document.getElementById("vedi-password-recupero");
 
 let modalitaRegistrazione = false;
 let inRecuperoPassword = false;
@@ -43,31 +45,65 @@ function urlRedirectAuth() {
   return window.location.origin + window.location.pathname;
 }
 
+function mostraSottotitolo(testo) {
+  if (!sottotitolo) {
+    return;
+  }
+  if (testo) {
+    sottotitolo.hidden = false;
+    sottotitolo.textContent = testo;
+  } else {
+    sottotitolo.hidden = true;
+    sottotitolo.textContent = "";
+  }
+}
+
+function impostaTipoPassword(visibile, campi) {
+  const tipo = visibile ? "text" : "password";
+  campi.forEach(function (campo) {
+    if (campo) {
+      campo.type = tipo;
+    }
+  });
+}
+
 function mostraModuloRecupero() {
   inRecuperoPassword = true;
   form.hidden = true;
   bloccoCambio.hidden = true;
   bloccoRecupero.hidden = true;
   formNuovaPassword.hidden = false;
-  sottotitolo.textContent = "Scegli una nuova password";
+  mostraSottotitolo("Scegli una nuova password");
 }
 
 function aggiornaModo() {
   if (modalitaRegistrazione) {
-    sottotitolo.textContent = "Crea un account per salvare la tua agenda";
+    mostraSottotitolo("Crea un account per salvare la tua agenda");
     bottoneInvia.textContent = "Registrati";
     testoCambio.textContent = "Hai già un account?";
     bottoneCambio.textContent = "Accedi";
     passwordInput.autocomplete = "new-password";
     bloccoRecupero.hidden = true;
   } else {
-    sottotitolo.textContent = "Accedi per vedere i tuoi appuntamenti";
+    mostraSottotitolo("");
     bottoneInvia.textContent = "Accedi";
     testoCambio.textContent = "Non hai un account?";
     bottoneCambio.textContent = "Registrati";
     passwordInput.autocomplete = "current-password";
     bloccoRecupero.hidden = false;
   }
+}
+
+if (vediPassword) {
+  vediPassword.addEventListener("change", function () {
+    impostaTipoPassword(vediPassword.checked, [passwordInput]);
+  });
+}
+
+if (vediPasswordRecupero) {
+  vediPasswordRecupero.addEventListener("change", function () {
+    impostaTipoPassword(vediPasswordRecupero.checked, [nuovaPasswordInput, ripetiPasswordInput]);
+  });
 }
 
 bottoneCambio.addEventListener("click", function () {

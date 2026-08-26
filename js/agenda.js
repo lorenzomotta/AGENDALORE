@@ -16,6 +16,14 @@ const MESI = [
 const GIORNI_LUNGHI = ["domenica", "lunedì", "martedì", "mercoledì", "giovedì", "venerdì", "sabato"];
 
 const emailUtente = document.getElementById("email-utente");
+const linkDati = document.querySelector(".link-dati");
+if (linkDati) {
+  linkDati.setAttribute("href", "dati.html");
+  linkDati.addEventListener("click", function (evento) {
+    evento.preventDefault();
+    window.location.assign("dati.html");
+  });
+}
 const bottoneEsci = document.getElementById("bottone-esci");
 const filtroData = document.getElementById("filtro-data");
 const bottoneOggi = document.getElementById("bottone-oggi");
@@ -41,6 +49,7 @@ const dettaglioTelefono = document.getElementById("dettaglio-telefono");
 const dettaglioEmail = document.getElementById("dettaglio-email");
 const dettaglioChiudi = document.getElementById("dettaglio-chiudi");
 const dettaglioModifica = document.getElementById("dettaglio-modifica");
+const dettaglioDuplica = document.getElementById("dettaglio-duplica");
 const dettaglioCancella = document.getElementById("dettaglio-cancella");
 const formAppuntamento = document.getElementById("form-appuntamento");
 const titoloDialogo = document.getElementById("titolo-dialogo");
@@ -48,6 +57,13 @@ const campoId = document.getElementById("id-appuntamento");
 const campoTitolo = document.getElementById("titolo");
 const campoData = document.getElementById("data");
 const campoOra = document.getElementById("ora");
+const campoImporto = document.getElementById("importo");
+const campoStatoPagamento = document.getElementById("stato-pagamento");
+const bloccoPagamento = document.getElementById("blocco-pagamento");
+const rigaDettaglioImporto = document.getElementById("riga-dettaglio-importo");
+const dettaglioImporto = document.getElementById("dettaglio-importo");
+const rigaDettaglioStatoPagamento = document.getElementById("riga-dettaglio-stato-pagamento");
+const dettaglioStatoPagamento = document.getElementById("dettaglio-stato-pagamento");
 const campoNote = document.getElementById("note");
 const campoTelefono = document.getElementById("telefono");
 const campoEmail = document.getElementById("email-appuntamento");
@@ -57,6 +73,7 @@ const campoEsecutore = document.getElementById("esecutore");
 const listaEsecutore = document.getElementById("lista-esecutore");
 const campoTipo = document.getElementById("tipo-appuntamento");
 const listaTipo = document.getElementById("lista-tipo-appuntamento");
+const campoPagamento = document.getElementById("pagamento");
 const campoTutti = document.getElementById("tutti");
 const erroreForm = document.getElementById("errore-form");
 const bottoneAnnulla = document.getElementById("bottone-annulla");
@@ -73,6 +90,7 @@ let utenteId = null;
 let vista = "giorno";
 let dataRiferimento = daISO(oggiISO());
 let cacheAppuntamenti = [];
+let cacheCompleanni = [];
 let testoRicerca = "";
 let idDettaglio = null;
 let idDaCancellare = null;
@@ -82,6 +100,9 @@ let nomeColonnaEsecutore = "Esecutore";
 let nomeColonnaTipo = "TipoAppuntamento";
 let nomeColonnaTelefono = "Telefono";
 let nomeColonnaEmail = "email";
+let nomeColonnaImporto = "Importo";
+let nomeColonnaStatoPagamento = "StatoPagamento";
+let nomeColonnaPagamento = "Pagamento";
 
 function oggiISO() {
   return aISO(new Date());
@@ -139,6 +160,9 @@ function eTutti(elemento) {
 }
 
 function eMio(elemento) {
+  if (elemento && elemento.eCompleanno) {
+    return false;
+  }
   return String(elemento.user_id || "") === String(utenteId || "");
 }
 
@@ -182,7 +206,92 @@ function testoEsecutore(elemento) {
 }
 
 function testoTipoAppuntamento(elemento) {
+  if (elemento && elemento.eCompleanno) {
+    return "COMPLEANNO";
+  }
   return valoreColonna(elemento, "TipoAppuntamento") || "APPUNTAMENTO";
+}
+
+function testoTipoPagamento(elemento) {
+  return valoreColonna(elemento, "TipoPagamento");
+}
+
+function iniziaPerPagare(testo) {
+  return String(testo || "").trim().toUpperCase().indexOf("PAGARE") === 0;
+}
+
+function eTipoPagare(elementoOTesto) {
+  if (typeof elementoOTesto === "string") {
+    return iniziaPerPagare(elementoOTesto);
+  }
+  return (
+    iniziaPerPagare(testoTipoPagamento(elementoOTesto)) ||
+    iniziaPerPagare(valoreColonna(elementoOTesto, "TipoAppuntamento"))
+  );
+}
+
+function valoreBooleano(valore) {
+  return valore === true || valore === "true" || valore === "t" || valore === 1 || valore === "1";
+}
+
+function flagColonnaBooleana(elemento, nomeLogico) {
+  if (!elemento) {
+    return null;
+  }
+  const basso = String(nomeLogico).toLowerCase();
+  const chiave = Object.keys(elemento).find(function (nome) {
+    return String(nome).toLowerCase() === basso;
+  });
+  if (!chiave || elemento[chiave] === null || elemento[chiave] === undefined || elemento[chiave] === "") {
+    return null;
+  }
+  return valoreBooleano(elemento[chiave]);
+}
+
+function ePagamento(elemento) {
+  if (!elemento || elemento.eCompleanno) {
+    return false;
+  }
+  return flagColonnaBooleana(elemento, "Pagamento") === true || eTipoPagare(elemento);
+}
+
+function formattaImporto(valore) {
+  const testo = String(valore || "").trim();
+  if (!testo) {
+    return "";
+  }
+  const numero = Number(String(testo).replace(",", "."));
+  if (!Number.isFinite(numero)) {
+    return testo;
+  }
+  return numero.toLocaleString("it-IT", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  });
+}
+
+function importoPerDatabase(valore) {
+  const testo = String(valore || "").trim().replace(",", ".");
+  if (!testo) {
+    return null;
+  }
+  const numero = Number(testo);
+  return Number.isFinite(numero) ? numero : testo;
+}
+
+function aggiornaCampiPagamento() {
+  const visibile = campoPagamento.checked;
+  bloccoPagamento.hidden = !visibile;
+  if (visibile && !campoStatoPagamento.value) {
+    campoStatoPagamento.value = "PAGARE";
+  }
+}
+
+function forseSpuntaPagamentoDaTipo() {
+  if (eTipoPagare(campoTipo.value)) {
+    campoPagamento.checked = true;
+  }
+  aggiornaCampiPagamento();
 }
 
 function testoRicercaAppuntamento(elemento) {
@@ -205,6 +314,9 @@ function testoRicercaAppuntamento(elemento) {
   pezzi.push(elemento.titolo || "");
   pezzi.push(elemento.note || "");
   pezzi.push(eTutti(elemento) ? "visibile a tutti" : "solo a te");
+  if (elemento.eCompleanno) {
+    pezzi.push("compleanno");
+  }
   const iso = normalizzaData(elemento.data);
   if (iso) {
     const data = daISO(iso);
@@ -215,13 +327,181 @@ function testoRicercaAppuntamento(elemento) {
   return pezzi.join(" ").toLowerCase();
 }
 
+function dueCifre(n) {
+  const testo = String(n);
+  return testo.length === 1 ? "0" + testo : testo;
+}
+
+function isoDaValoreData(valore) {
+  if (valore instanceof Date && !isNaN(valore.getTime())) {
+    return valore.getFullYear() + "-" + dueCifre(valore.getMonth() + 1) + "-" + dueCifre(valore.getDate());
+  }
+  const testo = String(valore || "").trim();
+  if (!testo) {
+    return "";
+  }
+  var trovato = testo.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (trovato) {
+    return trovato[1] + "-" + trovato[2] + "-" + trovato[3];
+  }
+  trovato = testo.match(/^(\d{1,2})[./-](\d{1,2})[./-](\d{4})/);
+  if (trovato) {
+    const giorno = trovato[1].length === 1 ? "0" + trovato[1] : trovato[1];
+    const mese = trovato[2].length === 1 ? "0" + trovato[2] : trovato[2];
+    return trovato[3] + "-" + mese + "-" + giorno;
+  }
+  return "";
+}
+
+function eBisestile(anno) {
+  const a = Number(anno);
+  return (a % 4 === 0 && a % 100 !== 0) || a % 400 === 0;
+}
+
+function etaDaNascita(nascitaIso, riguardoIso) {
+  const nascita = isoDaValoreData(nascitaIso);
+  const riguardo = isoDaValoreData(riguardoIso);
+  if (!nascita || !riguardo) {
+    return "";
+  }
+  const n = nascita.split("-");
+  const r = riguardo.split("-");
+  let eta = Number(r[0]) - Number(n[0]);
+  let meseGiornoNascita = n[1] + n[2];
+  if (n[1] === "02" && n[2] === "29" && !eBisestile(r[0])) {
+    meseGiornoNascita = "0228";
+  }
+  if (r[1] + r[2] < meseGiornoNascita) {
+    eta -= 1;
+  }
+  return eta >= 0 ? eta : 0;
+}
+
+function valoreRigaCompleanno(riga, candidati) {
+  const chiavi = Object.keys(riga || {});
+  for (let i = 0; i < candidati.length; i += 1) {
+    const basso = String(candidati[i]).toLowerCase();
+    const chiave = chiavi.find(function (nome) {
+      return String(nome).toLowerCase() === basso;
+    });
+    if (chiave && riga[chiave] != null && String(riga[chiave]).trim() !== "") {
+      return riga[chiave];
+    }
+  }
+  return "";
+}
+
+function idRigaCompleanno(riga) {
+  return valoreRigaCompleanno(riga, ["id", "IdCompleanno", "IDCOMPLEANNO", "idcompleanno"]);
+}
+
+function nominativoCompleanno(riga) {
+  return String(
+    valoreRigaCompleanno(riga, ["NOMINATIVO", "Nominativo", "Nome", "nome"]) || "Compleanno"
+  ).trim();
+}
+
+function dataNascitaCompleanno(riga) {
+  const diretto = valoreRigaCompleanno(riga, ["Data", "DataNascita", "Nascita", "Compleanno"]);
+  if (diretto) {
+    return isoDaValoreData(diretto);
+  }
+  const chiavi = Object.keys(riga || {});
+  const chiave = chiavi.find(function (nome) {
+    const basso = String(nome).toLowerCase();
+    return /data|nascita|compleanno/.test(basso) && basso !== "created_at";
+  });
+  return chiave ? isoDaValoreData(riga[chiave]) : "";
+}
+
+function isoCompleannoNellAnno(nascitaIso, anno) {
+  const nascita = isoDaValoreData(nascitaIso);
+  if (!nascita || !anno) {
+    return "";
+  }
+  const parti = nascita.split("-");
+  let mese = parti[1];
+  let giorno = parti[2];
+  if (mese === "02" && giorno === "29" && !eBisestile(anno)) {
+    giorno = "28";
+  }
+  return String(anno) + "-" + mese + "-" + giorno;
+}
+
+function eventoCompleanno(riga, iso) {
+  const nascita = dataNascitaCompleanno(riga);
+  const eta = etaDaNascita(nascita, iso);
+  const nominativo = nominativoCompleanno(riga);
+  const titolo = eta === "" ? nominativo : nominativo + " · " + eta + " anni";
+  return {
+    id: "compleanno-" + idRigaCompleanno(riga) + "-" + iso,
+    titolo: titolo,
+    data: iso,
+    ora: "",
+    note: "",
+    TipoAppuntamento: "COMPLEANNO",
+    Tutti: false,
+    eCompleanno: true,
+    user_id: "",
+  };
+}
+
+function compleanniDelGiorno(iso) {
+  const giorno = normalizzaData(iso);
+  if (!giorno) {
+    return [];
+  }
+  const anno = giorno.slice(0, 4);
+  const eventi = [];
+  cacheCompleanni.forEach(function (riga) {
+    const nascita = dataNascitaCompleanno(riga);
+    if (!nascita) {
+      return;
+    }
+    if (isoCompleannoNellAnno(nascita, anno) === giorno) {
+      eventi.push(eventoCompleanno(riga, giorno));
+    }
+  });
+  return eventi;
+}
+
+function compleanniDellAnno(anno) {
+  const eventi = [];
+  cacheCompleanni.forEach(function (riga) {
+    const nascita = dataNascitaCompleanno(riga);
+    const iso = isoCompleannoNellAnno(nascita, anno);
+    if (iso) {
+      eventi.push(eventoCompleanno(riga, iso));
+    }
+  });
+  return eventi;
+}
+
+function appuntamentiDelGiorno(iso) {
+  const giorno = normalizzaData(iso);
+  const reali = cacheAppuntamenti.filter(function (elemento) {
+    return normalizzaData(elemento.data) === giorno;
+  });
+  return compleanniDelGiorno(giorno).concat(reali);
+}
+
 function appuntamentiFiltrati() {
   const filtro = testoRicerca.trim().toLowerCase();
-  if (!filtro) {
-    return cacheAppuntamenti.slice();
+  const annoVista = dataRiferimento.getFullYear();
+  const annoOggi = new Date().getFullYear();
+  let elenco = cacheAppuntamenti.concat(compleanniDellAnno(annoVista));
+  if (annoOggi !== annoVista) {
+    elenco = elenco.concat(compleanniDellAnno(annoOggi));
   }
-  return cacheAppuntamenti.filter(function (elemento) {
-    return testoRicercaAppuntamento(elemento).indexOf(filtro) !== -1;
+  if (!filtro) {
+    elenco = elenco.slice();
+  } else {
+    elenco = elenco.filter(function (elemento) {
+      return testoRicercaAppuntamento(elemento).indexOf(filtro) !== -1;
+    });
+  }
+  return elenco.sort(function (a, b) {
+    return String(a.data || "").localeCompare(String(b.data || ""));
   });
 }
 
@@ -254,6 +534,9 @@ function collegaCombo(input, lista, elencoValori) {
         evento.preventDefault();
         input.value = valore;
         lista.hidden = true;
+        if (input === campoTipo) {
+          forseSpuntaPagamentoDaTipo();
+        }
       });
       lista.appendChild(voce);
     });
@@ -270,6 +553,9 @@ function collegaCombo(input, lista, elencoValori) {
         evento.preventDefault();
         input.value = scritto;
         lista.hidden = true;
+        if (input === campoTipo) {
+          forseSpuntaPagamentoDaTipo();
+        }
       });
       lista.appendChild(voceNuova);
     }
@@ -316,6 +602,15 @@ function ricordaNomiColonne(righe) {
     }
     if (basso === "email") {
       nomeColonnaEmail = chiave;
+    }
+    if (basso === "importo") {
+      nomeColonnaImporto = chiave;
+    }
+    if (basso === "statopagamento") {
+      nomeColonnaStatoPagamento = chiave;
+    }
+    if (basso === "pagamento") {
+      nomeColonnaPagamento = chiave;
     }
   });
 }
@@ -381,13 +676,6 @@ function testoBarraGiorno() {
   return "";
 }
 
-function appuntamentiDelGiorno(iso) {
-  const giorno = normalizzaData(iso);
-  return cacheAppuntamenti.filter(function (elemento) {
-    return normalizzaData(elemento.data) === giorno;
-  });
-}
-
 function mostraErroreForm(testo) {
   erroreForm.hidden = !testo;
   erroreForm.textContent = testo || "";
@@ -412,7 +700,7 @@ function aggiornaPulsantiVista() {
 
 function cardAppuntamento(elemento) {
   const li = document.createElement("li");
-  li.className = "card-appuntamento";
+  li.className = elemento.eCompleanno ? "card-appuntamento compleanno" : "card-appuntamento";
   li.setAttribute("data-id", elemento.id);
 
   const h2 = document.createElement("h2");
@@ -446,13 +734,19 @@ function cardAppuntamento(elemento) {
     modifica.type = "button";
     modifica.setAttribute("data-azione", "modifica");
     modifica.textContent = "Modifica";
+    const duplica = document.createElement("button");
+    duplica.className = "bottone-secondario";
+    duplica.type = "button";
+    duplica.setAttribute("data-azione", "duplica");
+    duplica.textContent = "Duplica";
     const cancella = document.createElement("button");
     cancella.className = "bottone-pericolo";
     cancella.type = "button";
     cancella.setAttribute("data-azione", "cancella");
     cancella.textContent = "Cancella";
-    azioni.appendChild(modifica);
     azioni.appendChild(cancella);
+    azioni.appendChild(duplica);
+    azioni.appendChild(modifica);
     li.appendChild(azioni);
   }
   return li;
@@ -460,14 +754,17 @@ function cardAppuntamento(elemento) {
 
 function rigaGiorno(elemento) {
   const li = document.createElement("li");
-  li.className = "riga-appuntamento";
+  li.className = elemento.eCompleanno ? "riga-appuntamento compleanno" : "riga-appuntamento";
   li.setAttribute("data-id", elemento.id);
   li.setAttribute("role", "button");
   li.tabIndex = 0;
 
+  const prima = document.createElement("div");
+  prima.className = "prima-riga";
+
   const ora = document.createElement("span");
   ora.className = "ora-riga";
-  ora.textContent = formattaOra(elemento.ora) || "—";
+  ora.textContent = elemento.eCompleanno ? "🎂" : formattaOra(elemento.ora) || "—";
 
   const sep = document.createElement("span");
   sep.className = "sep-riga";
@@ -475,20 +772,41 @@ function rigaGiorno(elemento) {
 
   const tipo = document.createElement("span");
   tipo.className = "titolo-riga";
-  tipo.textContent = testoTipoAppuntamento(elemento);
+  tipo.textContent = elemento.eCompleanno
+    ? elemento.titolo || "Compleanno"
+    : testoTipoAppuntamento(elemento);
 
-  li.appendChild(ora);
-  li.appendChild(sep);
-  li.appendChild(tipo);
-  if (eTutti(elemento)) {
-    li.appendChild(badgeTutti());
+  prima.appendChild(ora);
+  prima.appendChild(sep);
+  prima.appendChild(tipo);
+  if (eTutti(elemento) && !elemento.eCompleanno) {
+    prima.appendChild(badgeTutti());
+  }
+  li.appendChild(prima);
+
+  if (!elemento.eCompleanno && elemento.titolo && (vista === "giorno" || vista === "settimana")) {
+    const seconda = document.createElement("p");
+    seconda.className = "sotto-riga";
+    seconda.textContent = elemento.titolo;
+    li.appendChild(seconda);
   }
   return li;
 }
 
 function trovaAppuntamento(id) {
-  return cacheAppuntamenti.find(function (elemento) {
+  const reale = cacheAppuntamenti.find(function (elemento) {
     return String(elemento.id) === String(id);
+  });
+  if (reale) {
+    return reale;
+  }
+  const testo = String(id || "");
+  const trovato = testo.match(/^compleanno-(.+)-(\d{4}-\d{2}-\d{2})$/);
+  if (!trovato) {
+    return undefined;
+  }
+  return compleanniDelGiorno(trovato[2]).find(function (elemento) {
+    return String(elemento.id) === testo;
   });
 }
 
@@ -505,7 +823,16 @@ function apriDettaglio(id) {
   }
   idDettaglio = elemento.id;
   dettaglioQuando.textContent = testoQuando(elemento);
-  dettaglioVisibilita.textContent = eTutti(elemento) ? "Visibile a tutti" : "Visibile solo a te";
+  dettaglioVisibilita.textContent = elemento.eCompleanno
+    ? "Compleanno (ogni anno)"
+    : eTutti(elemento)
+      ? "Visibile a tutti"
+      : "Visibile solo a te";
+  const mostraPagamento = ePagamento(elemento);
+  rigaDettaglioImporto.hidden = !mostraPagamento;
+  rigaDettaglioStatoPagamento.hidden = !mostraPagamento;
+  dettaglioImporto.textContent = formattaImporto(valoreColonna(elemento, "Importo")) || "—";
+  dettaglioStatoPagamento.textContent = valoreColonna(elemento, "StatoPagamento") || "—";
   dettaglioTipo.textContent = testoTipoAppuntamento(elemento);
   dettaglioTitolo.textContent = elemento.titolo || "—";
   dettaglioInterlocutore.textContent = testoInterlocutore(elemento) || "—";
@@ -531,7 +858,7 @@ function disegnaGiorno() {
   const elementi = appuntamentiDelGiorno(iso);
   if (!elementi.length) {
     ul.appendChild(listaVuota("Nessun appuntamento in questo giorno."));
-    if (cacheAppuntamenti.length) {
+    if (cacheAppuntamenti.length || cacheCompleanni.length) {
       ul.appendChild(
         listaVuota("Hai appuntamenti in altri giorni: apri Settimana o Mese per vederli.")
       );
@@ -660,7 +987,7 @@ function disegnaCerca() {
   const ul = document.createElement("ul");
   ul.className = "lista";
   const elementi = appuntamentiFiltrati();
-  if (!cacheAppuntamenti.length) {
+  if (!cacheAppuntamenti.length && !cacheCompleanni.length) {
     ul.appendChild(listaVuota("Nessun appuntamento."));
     areaVista.appendChild(ul);
     return;
@@ -712,6 +1039,22 @@ function disegnaVista() {
   }
 }
 
+async function caricaCompleanni() {
+  cacheCompleanni = [];
+  const nomi = ["Compleanni", "compleanni"];
+  for (let i = 0; i < nomi.length; i += 1) {
+    const { data, error } = await getSupabase().from(nomi[i]).select("*");
+    if (!error) {
+      cacheCompleanni = data || [];
+      return;
+    }
+    const testo = String((error && error.message) || error || "");
+    if (!/schema cache|could not find the table/i.test(testo)) {
+      return;
+    }
+  }
+}
+
 async function caricaAppuntamenti() {
   stato.textContent = "";
   const { data, error } = await getSupabase()
@@ -719,6 +1062,8 @@ async function caricaAppuntamenti() {
     .select("*")
     .order("data", { ascending: true })
     .order("ora", { ascending: true });
+
+  await caricaCompleanni();
 
   if (error) {
     stato.textContent = messaggioErrore(error);
@@ -748,13 +1093,13 @@ function vaiA(iso) {
   caricaAppuntamenti();
 }
 
-function apriDialogo(appuntamento) {
+function apriDialogo(appuntamento, duplica) {
   mostraErroreForm("");
   if (appuntamento) {
-    titoloDialogo.textContent = "Modifica appuntamento";
-    campoId.value = appuntamento.id;
+    titoloDialogo.textContent = duplica ? "Duplica appuntamento" : "Modifica appuntamento";
+    campoId.value = duplica ? "" : appuntamento.id || "";
     campoTitolo.value = appuntamento.titolo;
-    campoData.value = appuntamento.data;
+    campoData.value = normalizzaData(appuntamento.data);
     campoOra.value = formattaOra(appuntamento.ora);
     campoTipo.value = testoTipoAppuntamento(appuntamento);
     campoInterlocutore.value = testoInterlocutore(appuntamento);
@@ -763,6 +1108,10 @@ function apriDialogo(appuntamento) {
     campoTelefono.value = valoreColonna(appuntamento, "Telefono");
     campoEmail.value = valoreColonna(appuntamento, "email");
     campoTutti.checked = eTutti(appuntamento);
+    campoPagamento.checked = ePagamento(appuntamento);
+    const stato = valoreColonna(appuntamento, "StatoPagamento").toUpperCase();
+    campoImporto.value = valoreColonna(appuntamento, "Importo");
+    campoStatoPagamento.value = stato === "PAGATO" ? "PAGATO" : "PAGARE";
   } else {
     titoloDialogo.textContent = "Nuovo appuntamento";
     campoId.value = "";
@@ -776,10 +1125,14 @@ function apriDialogo(appuntamento) {
     campoTelefono.value = "";
     campoEmail.value = "";
     campoTutti.checked = false;
+    campoPagamento.checked = false;
+    campoImporto.value = "";
+    campoStatoPagamento.value = "PAGARE";
   }
   listaTipo.hidden = true;
   listaInterlocutore.hidden = true;
   listaEsecutore.hidden = true;
+  aggiornaCampiPagamento();
   dialogo.showModal();
 }
 
@@ -849,8 +1202,14 @@ collegaCombo(campoTipo, listaTipo, function () {
   if (elenco.indexOf("APPUNTAMENTO") === -1) {
     elenco.unshift("APPUNTAMENTO");
   }
+  if (elenco.indexOf("PAGARE") === -1) {
+    elenco.push("PAGARE");
+  }
   return elenco;
 });
+campoTipo.addEventListener("input", forseSpuntaPagamentoDaTipo);
+campoTipo.addEventListener("change", forseSpuntaPagamentoDaTipo);
+campoPagamento.addEventListener("change", aggiornaCampiPagamento);
 collegaCombo(campoInterlocutore, listaInterlocutore, function () {
   return valoriUnici(testoInterlocutore);
 });
@@ -875,6 +1234,15 @@ dettaglioModifica.addEventListener("click", function () {
   apriDialogo(elemento);
 });
 
+dettaglioDuplica.addEventListener("click", function () {
+  const elemento = trovaAppuntamento(idDettaglio);
+  if (!elemento || !eMio(elemento)) {
+    return;
+  }
+  dialogoDettaglio.close();
+  apriDialogo(elemento, true);
+});
+
 function chiediCancellazione(id) {
   idDaCancellare = id;
   dialogoCancella.showModal();
@@ -882,7 +1250,7 @@ function chiediCancellazione(id) {
 
 async function eseguiCancellazione() {
   const id = idDaCancellare;
-  if (!id) {
+  if (!id || String(id).indexOf("compleanno-") === 0) {
     return;
   }
   const cancellazione = await getSupabase().from("appuntamenti").delete().eq("id", id);
@@ -970,6 +1338,14 @@ areaVista.addEventListener("click", async function (evento) {
     return;
   }
 
+  if (azione === "duplica") {
+    if (!eMio(data)) {
+      return;
+    }
+    apriDialogo(Object.assign({}, data, { data: normalizzaData(data.data) }), true);
+    return;
+  }
+
   if (azione === "cancella") {
     if (!eMio(data)) {
       return;
@@ -988,6 +1364,10 @@ async function salvaAppuntamento() {
   const note = campoNote.value.trim();
   const telefono = telefonoPerDatabase(campoTelefono.value);
   const email = vuotoONull(campoEmail.value);
+  const mostraPagamento = campoPagamento.checked;
+  const importo = mostraPagamento ? importoPerDatabase(campoImporto.value) : null;
+  const statoPagamento = mostraPagamento ? campoStatoPagamento.value || "PAGARE" : null;
+  const pagamento = mostraPagamento;
 
   if (!tipo || !titolo || !data) {
     mostraErroreForm("Tipo, titolo e data sono obbligatori.");
@@ -1007,6 +1387,9 @@ async function salvaAppuntamento() {
   payload[nomeColonnaTipo] = tipo;
   payload[nomeColonnaTelefono] = telefono;
   payload[nomeColonnaEmail] = email;
+  payload[nomeColonnaImporto] = importo;
+  payload[nomeColonnaStatoPagamento] = statoPagamento;
+  payload[nomeColonnaPagamento] = pagamento;
 
   let risultato;
   if (campoId.value) {
@@ -1015,7 +1398,7 @@ async function salvaAppuntamento() {
     risultato = await getSupabase().from("appuntamenti").insert(payload);
   }
 
-  if (risultato.error && /column|schema|tutti|interlocutore|esecutore|tipoappuntamento|telefono|email/i.test(String(risultato.error.message || ""))) {
+  if (risultato.error && /column|schema|tutti|interlocutore|esecutore|tipoappuntamento|telefono|email|importo|statopagamento|pagamento/i.test(String(risultato.error.message || ""))) {
     const altraTutti = nomeColonnaTutti === "Tutti" ? "tutti" : "Tutti";
     const altraInterlocutore =
       nomeColonnaInterlocutore === "Interlocutore" ? "interlocutore" : "Interlocutore";
@@ -1024,18 +1407,28 @@ async function salvaAppuntamento() {
       nomeColonnaTipo === "TipoAppuntamento" ? "tipoappuntamento" : "TipoAppuntamento";
     const altraTelefono = nomeColonnaTelefono === "Telefono" ? "telefono" : "Telefono";
     const altraEmail = nomeColonnaEmail === "email" ? "Email" : "email";
+    const altraImporto = nomeColonnaImporto === "Importo" ? "importo" : "Importo";
+    const altraStatoPagamento =
+      nomeColonnaStatoPagamento === "StatoPagamento" ? "statopagamento" : "StatoPagamento";
+    const altraPagamento = nomeColonnaPagamento === "Pagamento" ? "pagamento" : "Pagamento";
     delete payload[nomeColonnaTutti];
     delete payload[nomeColonnaInterlocutore];
     delete payload[nomeColonnaEsecutore];
     delete payload[nomeColonnaTipo];
     delete payload[nomeColonnaTelefono];
     delete payload[nomeColonnaEmail];
+    delete payload[nomeColonnaImporto];
+    delete payload[nomeColonnaStatoPagamento];
+    delete payload[nomeColonnaPagamento];
     payload[altraTutti] = campoTutti.checked;
     payload[altraInterlocutore] = interlocutore;
     payload[altraEsecutore] = esecutore;
     payload[altraTipo] = tipo;
     payload[altraTelefono] = telefono;
     payload[altraEmail] = email;
+    payload[altraImporto] = importo;
+    payload[altraStatoPagamento] = statoPagamento;
+    payload[altraPagamento] = pagamento;
     if (campoId.value) {
       risultato = await getSupabase().from("appuntamenti").update(payload).eq("id", campoId.value);
     } else {
@@ -1048,6 +1441,9 @@ async function salvaAppuntamento() {
       nomeColonnaTipo = altraTipo;
       nomeColonnaTelefono = altraTelefono;
       nomeColonnaEmail = altraEmail;
+      nomeColonnaImporto = altraImporto;
+      nomeColonnaStatoPagamento = altraStatoPagamento;
+      nomeColonnaPagamento = altraPagamento;
     }
   }
 

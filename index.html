@@ -3,16 +3,17 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta http-equiv="Cache-Control" content="no-store" />
     <meta name="theme-color" content="#1f6b5a" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <title>Accedi · AgendaLore</title>
+    <title>Accedi · AGENDA</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="css/index.css" />
+    <link rel="stylesheet" href="css/index.css?v=login" />
   </head>
   <body>
     <main class="schermo">
@@ -27,8 +28,8 @@
             <rect x="26" y="26" width="8" height="8" rx="2" fill="#f4f1ea" />
           </svg>
         </div>
-        <h1 id="titolo-app">AgendaLore</h1>
-        <p class="sottotitolo" id="sottotitolo">Accedi per vedere i tuoi appuntamenti</p>
+        <h1 id="titolo-app">AGENDA</h1>
+        <p class="sottotitolo" id="sottotitolo" hidden></p>
 
         <form id="form-auth" novalidate>
           <label class="campo">
@@ -55,6 +56,10 @@
               minlength="6"
               placeholder="almeno 6 caratteri"
             />
+          </label>
+          <label class="opzione-password">
+            <input id="vedi-password" type="checkbox" />
+            <span>Mostra password</span>
           </label>
 
           <p id="messaggio" class="messaggio" role="status" hidden></p>
@@ -89,6 +94,10 @@
               placeholder="ripeti la stessa password"
             />
           </label>
+          <label class="opzione-password">
+            <input id="vedi-password-recupero" type="checkbox" />
+            <span>Mostra password</span>
+          </label>
           <p id="messaggio-recupero" class="messaggio" role="status" hidden></p>
           <button id="bottone-salva-password" class="bottone-principale" type="submit">
             Salva nuova password
@@ -102,16 +111,12 @@
         <p class="cambio-modo" id="blocco-recupero">
           <button id="bottone-recupero" class="link" type="button">Password dimenticata?</button>
         </p>
-        <p class="nota">
-          Se l’accesso fallisce, in Supabase apri Authentication → Users:
-          l’email deve essere identica e l’utente deve risultare Confermato.
-        </p>
       </section>
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/config.js"></script>
     <script src="js/supabase-client.js"></script>
-    <script src="js/index.js"></script>
+    <script src="js/index.js?v=login"></script>
   </body>
 </html>

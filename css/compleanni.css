@@ -95,15 +95,15 @@ body {
   box-shadow: 0 8px 20px rgba(28, 36, 31, 0.06);
 }
 
-#tabella-password {
+#tabella-compleanni {
   width: 100%;
   border-collapse: collapse;
   min-width: 560px;
   font-size: 0.92rem;
 }
 
-#tabella-password th,
-#tabella-password td {
+#tabella-compleanni th,
+#tabella-compleanni td {
   padding: 10px 12px;
   text-align: left;
   border-bottom: 1px solid #ece7dd;
@@ -111,41 +111,10 @@ body {
   word-break: break-word;
 }
 
-#tabella-password thead th {
+#tabella-compleanni thead th {
   background: #e8f3ee;
   font-weight: 700;
   white-space: nowrap;
-}
-
-.riga-sezione td,
-.riga-portale td {
-  border-bottom: 0;
-  padding: 6px 8px;
-}
-
-.riga-sezione button,
-.riga-portale button {
-  width: 100%;
-  border: 0;
-  text-align: left;
-  font: inherit;
-  font-weight: 700;
-  cursor: pointer;
-  min-height: 40px;
-  padding: 8px 10px;
-  border-radius: 8px;
-}
-
-.riga-sezione button {
-  background: #1f6b5a;
-  color: #fff;
-}
-
-.riga-portale button {
-  background: #dceee6;
-  color: #143f36;
-  margin-left: 10px;
-  width: calc(100% - 10px);
 }
 
 .riga-dati {
@@ -154,10 +123,6 @@ body {
 
 .riga-dati:hover {
   background: #f7f4ee;
-}
-
-.riga-nascosta {
-  display: none;
 }
 
 .vuoto-cella {
@@ -306,8 +271,10 @@ a.bottone-secondario {
   min-height: 46px;
 }
 
-.campo select {
-  appearance: auto;
+.nota-campo {
+  font-weight: 400;
+  font-size: 0.82rem;
+  color: #5c6b64;
 }
 
 .combo {
@@ -347,18 +314,6 @@ a.bottone-secondario {
   resize: vertical;
 }
 
-.nota-campo {
-  font-weight: 400;
-  font-size: 0.78rem;
-  color: #5b665f;
-}
-
-.sotto-etichetta {
-  margin-top: 8px;
-  font-size: 0.82rem;
-  color: #1f6b5a;
-}
-
 .messaggio {
   margin: 0 0 12px;
   padding: 10px 12px;
@@ -383,8 +338,6 @@ a.bottone-secondario {
   flex: 1;
 }
 
-/* Solo smartphone (non tablet): la tabella deve stare nella larghezza dello schermo.
-   I tablet restano con gli spazi e i font di sopra (da 601px in su). */
 @media (max-width: 600px) {
   .testata {
     gap: 8px;
@@ -417,38 +370,21 @@ a.bottone-secondario {
     overflow-x: hidden;
   }
 
-  #tabella-password {
+  #tabella-compleanni {
     min-width: 0;
     width: 100%;
     table-layout: fixed;
     font-size: 0.72rem;
   }
 
-  #tabella-password th,
-  #tabella-password td {
+  #tabella-compleanni th,
+  #tabella-compleanni td {
     padding: 6px 4px;
   }
 
-  #tabella-password thead th {
+  #tabella-compleanni thead th {
     white-space: normal;
     font-size: 0.68rem;
     line-height: 1.15;
-  }
-
-  .riga-sezione td,
-  .riga-portale td {
-    padding: 4px;
-  }
-
-  .riga-sezione button,
-  .riga-portale button {
-    min-height: 34px;
-    padding: 6px 8px;
-    font-size: 0.78rem;
-  }
-
-  .riga-portale button {
-    margin-left: 6px;
-    width: calc(100% - 6px);
   }
 }

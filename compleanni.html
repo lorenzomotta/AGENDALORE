@@ -5,27 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="theme-color" content="#1f6b5a" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <title>Tabella Password · AgendaLore</title>
-    <script>
-      (function () {
-        var da = String(document.referrer || "");
-        if (da.indexOf("agenda.html") !== -1) {
-          window.location.replace("dati.html");
-        }
-      })();
-    </script>
+    <title>Tabella Compleanni · AGENDA</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="css/password.css" />
+    <link rel="stylesheet" href="css/compleanni.css?v=eta" />
   </head>
   <body>
     <header class="testata">
       <div>
-        <p class="brand">Tabella Password</p>
+        <p class="brand">Tabella Compleanni</p>
         <p id="email-utente" class="email-utente">...</p>
       </div>
       <div class="azioni-testata">
@@ -46,7 +38,7 @@
       </label>
       <p id="stato" class="stato" role="status" hidden></p>
       <div class="tabella-wrap">
-        <table id="tabella-password">
+        <table id="tabella-compleanni">
           <thead id="testata-colonne"></thead>
           <tbody id="corpo-tabella"></tbody>
         </table>
@@ -95,6 +87,6 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/config.js"></script>
     <script src="js/supabase-client.js"></script>
-    <script src="js/password.js?v=dati"></script>
+    <script src="js/compleanni.js?v=eta"></script>
   </body>
 </html>

@@ -267,7 +267,7 @@ body {
 }
 
 .lista-compatta {
-  gap: 3px;
+  gap: 1px;
 }
 
 .mini-vuoto {
@@ -334,8 +334,9 @@ body {
   color: #1e4d28;
 }
 
-.campo input,
-.campo textarea {
+.campo input:not([type="checkbox"]),
+.campo textarea,
+.campo select {
   width: 100%;
   border: 1px solid #d5d0c6;
   background: #fff;
@@ -344,6 +345,10 @@ body {
   font: inherit;
   font-weight: 400;
   min-height: 46px;
+}
+
+.campo select {
+  appearance: auto;
 }
 
 .campo textarea {
@@ -362,23 +367,39 @@ body {
 
 .area-lista > .lista {
   min-height: 240px;
-  gap: 3px;
+  gap: 1px;
 }
 
 .riga-appuntamento {
   display: flex;
-  align-items: center;
-  gap: 6px;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0;
   background: #fff;
   border-radius: 6px;
-  padding: 4px 10px;
-  line-height: 1.2;
+  padding: 2px 8px;
+  line-height: 1.05;
   font-size: 0.95rem;
   cursor: pointer;
 }
 
 .riga-appuntamento:active {
   background: #eef6f0;
+}
+
+.riga-appuntamento.compleanno {
+  background: #fff6e8;
+}
+
+.riga-appuntamento.compleanno .titolo-riga {
+  color: #9a5b12;
+}
+
+.prima-riga {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
 }
 
 .ora-riga {
@@ -394,7 +415,21 @@ body {
 }
 
 .titolo-riga {
+  flex: 1;
+  min-width: 0;
   font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sotto-riga {
+  margin: 0;
+  padding: 0;
+  font-size: 0.75rem;
+  font-weight: 400;
+  line-height: 1.05;
+  color: #555;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -448,6 +483,11 @@ body {
   color: #1c1c1c;
 }
 
+.riga-dettaglio[hidden],
+#blocco-pagamento[hidden] {
+  display: none;
+}
+
 .etichetta-dettaglio {
   font-weight: 700;
   margin-right: 6px;
@@ -466,6 +506,10 @@ body {
   background: #fff;
   border-radius: 12px;
   padding: 14px;
+}
+
+.card-appuntamento.compleanno {
+  background: #fff6e8;
 }
 
 .card-appuntamento h2 {
@@ -489,8 +533,16 @@ body {
 
 .azioni {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
   margin-top: 12px;
+}
+
+.azioni button {
+  flex: 1;
+  min-width: 0;
+  padding: 0 8px;
+  font-size: 0.85rem;
 }
 
 .bottone-principale,
@@ -644,6 +696,42 @@ body {
   accent-color: #1e4d28;
 }
 
+.riga-tipo-pagamento {
+  gap: 6px;
+}
+
+.riga-etichette-tipo {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.riga-etichette-tipo label {
+  margin: 0;
+  font: inherit;
+  font-weight: 600;
+}
+
+.riga-input-tipo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.riga-input-tipo .combo {
+  flex: 1;
+  min-width: 0;
+}
+
+.riga-input-tipo input[type="checkbox"] {
+  width: 22px;
+  height: 22px;
+  min-height: 0;
+  flex-shrink: 0;
+  accent-color: #1e4d28;
+}
+
 .badge-tutti {
   flex-shrink: 0;
   margin-left: auto;
@@ -678,6 +766,15 @@ body {
   grid-template-columns: 1fr 1fr;
   gap: 8px;
   margin-top: 8px;
+}
+
+.azioni-dettaglio {
+  grid-template-columns: 1fr 1fr 1fr;
+}
+
+.azioni-dettaglio button {
+  padding: 0 8px;
+  font-size: 0.82rem;
 }
 
 .vuoto {

@@ -1,4 +1,6 @@
-const NOME_TABELLA = "Password";
+const NOMI_TABELLA = ["Rifornimenti", "rifornimenti"];
+let nomeTabella = NOMI_TABELLA[0];
+let erroreCaricamento = "";
 
 const emailUtente = document.getElementById("email-utente");
 const bottoneEsci = document.getElementById("bottone-esci");
@@ -21,8 +23,24 @@ const campoRicerca = document.getElementById("campo-ricerca");
 let colonne = ["id"];
 let cacheRighe = [];
 let inModifica = false;
-const chiusiSezione = {};
-const chiusiPortale = {};
+let utenteId = null;
+let nomeColonnaUtente = null;
+
+function tabellaApi() {
+  return getSupabase().from(nomeTabella);
+}
+
+function tabellaNonTrovata(error) {
+  const testo = String((error && error.message) || error || "");
+  return /schema cache|could not find the table/i.test(testo);
+}
+
+function messaggioTabella(error) {
+  if (tabellaNonTrovata(error)) {
+    return "La tabella Rifornimenti c'è, ma Supabase non l'ha ancora messa nell'elenco dell'app. In SQL Editor esegui sql/rifornimenti-app.sql, aspetta 10 secondi e ricarica questa pagina.";
+  }
+  return messaggioErrore(error);
+}
 
 function mostraErroreForm(testo) {
   erroreForm.hidden = !testo;
@@ -53,55 +71,86 @@ function colonneDaRighe(righe) {
   return elenco.length ? elenco : ["id"];
 }
 
+function eColonnaNascosta(nome) {
+  const basso = String(nome).toLowerCase();
+  return basso === "id" || basso === "created_at" || basso === "user_id";
+}
+
 function colonneTabella() {
-  const senzaId = colonne.filter(function (nome) {
-    return nome !== "id";
+  const visibili = colonne.filter(function (nome) {
+    return !eColonnaNascosta(nome);
   });
-  const sezione = trovaColonna("Sezione");
-  const portale = trovaColonna("Portale");
-  const resto = senzaId.filter(function (nome) {
-    return nome !== sezione && nome !== portale;
-  });
-  const ordinate = [];
-  if (sezione) {
-    ordinate.push(sezione);
+  const data = trovaColonna("Data");
+  if (!data) {
+    return visibili;
   }
-  if (portale) {
-    ordinate.push(portale);
-  }
-  return ordinate.concat(resto);
+  return [data].concat(
+    visibili.filter(function (nome) {
+      return nome !== data;
+    })
+  );
 }
 
 function colonneModificabili() {
   return colonne.filter(function (nome) {
-    return nome !== "id" && nome !== "created_at";
+    return !eColonnaNascosta(nome);
   });
 }
 
-function testoCella(valore) {
+function tipoCampo(nome) {
+  const basso = String(nome).toLowerCase();
+  if ((/data|date/.test(basso) && !/aggiorn/.test(basso)) || basso === "giorno") {
+    return "date";
+  }
+  if (/^ora$|orario/.test(basso)) {
+    return "time";
+  }
+  if (/importo|prezzo|euro|litri|km|chilometr|quantit|numero|costo/.test(basso)) {
+    return "number";
+  }
+  if (/note|descrizione|commento|testo/.test(basso)) {
+    return "textarea";
+  }
+  return "text";
+}
+
+function usaCombo(nome) {
+  const basso = String(nome).toLowerCase();
+  return /veicolo|auto|mezzo|macchina|stazione|distributore|tipo|carburante|marca/.test(basso);
+}
+
+function valorePerCampo(nome, valore) {
+  if (valore === null || valore === undefined) {
+    return "";
+  }
+  const testo = String(valore);
+  const tipo = tipoCampo(nome);
+  if (tipo === "date") {
+    const trovato = testo.match(/^(\d{4}-\d{2}-\d{2})/);
+    return trovato ? trovato[1] : testo;
+  }
+  if (tipo === "time") {
+    return testo.slice(0, 5);
+  }
+  return testo;
+}
+
+function testoCella(nome, valore) {
   if (valore === null || valore === undefined || valore === "") {
     return "—";
   }
   if (typeof valore === "object") {
     return JSON.stringify(valore);
   }
-  return String(valore);
-}
-
-function valoreGruppo(riga, nomeLogico) {
-  const colonna = trovaColonna(nomeLogico);
-  if (!colonna) {
-    return "(senza " + nomeLogico + ")";
+  const tipo = tipoCampo(nome);
+  const testo = String(valore);
+  if (tipo === "date") {
+    const trovato = testo.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (trovato) {
+      return trovato[3] + "/" + trovato[2] + "/" + trovato[1];
+    }
   }
-  const valore = riga[colonna];
-  if (valore === null || valore === undefined || valore === "") {
-    return "(senza " + nomeLogico + ")";
-  }
-  return String(valore);
-}
-
-function chiavePortale(sezione, portale) {
-  return sezione + "||" + portale;
+  return testo;
 }
 
 function confrontaTesto(a, b) {
@@ -109,14 +158,6 @@ function confrontaTesto(a, b) {
     numeric: true,
     sensitivity: "base",
   });
-}
-
-function sezioneChiusa(sezione) {
-  return chiusiSezione[sezione] !== false;
-}
-
-function portaleChiuso(chiave) {
-  return chiusiPortale[chiave] !== false;
 }
 
 function testoRicerca() {
@@ -139,11 +180,18 @@ function rigaCorrisponde(riga, query) {
 
 function righeVisibili() {
   const query = testoRicerca();
-  if (!query) {
-    return cacheRighe;
+  let elenco = cacheRighe;
+  if (query) {
+    elenco = cacheRighe.filter(function (riga) {
+      return rigaCorrisponde(riga, query);
+    });
   }
-  return cacheRighe.filter(function (riga) {
-    return rigaCorrisponde(riga, query);
+  const colData = trovaColonna("Data") || trovaColonna("created_at");
+  return elenco.slice().sort(function (a, b) {
+    if (!colData) {
+      return 0;
+    }
+    return String(b[colData] || "").localeCompare(String(a[colData] || ""));
   });
 }
 
@@ -155,26 +203,6 @@ function mostraStato(testo) {
   }
   stato.hidden = false;
   stato.textContent = testo;
-}
-
-function aggiornaStato() {
-  mostraStato("");
-}
-
-function raggruppaRighe(righe) {
-  const sezioni = {};
-  righe.forEach(function (riga) {
-    const sezione = valoreGruppo(riga, "Sezione");
-    const portale = valoreGruppo(riga, "Portale");
-    if (!sezioni[sezione]) {
-      sezioni[sezione] = {};
-    }
-    if (!sezioni[sezione][portale]) {
-      sezioni[sezione][portale] = [];
-    }
-    sezioni[sezione][portale].push(riga);
-  });
-  return sezioni;
 }
 
 async function assicuratiLogin() {
@@ -204,17 +232,9 @@ function aggiornaBarraAzioni() {
   titoloDialogo.textContent = nuovaRiga ? "Nuova riga" : inModifica ? "Modifica riga" : "Dettaglio";
 }
 
-function valoriUniciColonna(nomeColonna, sezioneFiltro) {
-  const colSezione = trovaColonna("Sezione");
+function valoriUniciColonna(nomeColonna) {
   const visti = {};
   cacheRighe.forEach(function (riga) {
-    if (
-      sezioneFiltro &&
-      colSezione &&
-      String(riga[colSezione] || "") !== sezioneFiltro
-    ) {
-      return;
-    }
     const valore = riga[nomeColonna];
     if (valore === null || valore === undefined || String(valore).trim() === "") {
       return;
@@ -241,7 +261,7 @@ function creaCombo(nome, valoreAttuale) {
   lista.hidden = true;
 
   function disegnaOpzioni(filtro) {
-    const tutti = valoriUniciColonna(nome, "");
+    const tutti = valoriUniciColonna(nome);
     const q = (filtro || "").trim().toLowerCase();
     lista.innerHTML = "";
 
@@ -260,10 +280,10 @@ function creaCombo(nome, valoreAttuale) {
     });
 
     const scritto = (filtro || "").trim();
-    const giaCè = tutti.some(function (valore) {
+    const giaCe = tutti.some(function (valore) {
       return valore.toLowerCase() === scritto.toLowerCase();
     });
-    if (scritto && !giaCè) {
+    if (scritto && !giaCe) {
       const voceNuova = document.createElement("li");
       voceNuova.className = "combo-nuova";
       voceNuova.textContent = "Aggiungi «" + scritto + "»";
@@ -298,11 +318,6 @@ function creaCombo(nome, valoreAttuale) {
   return wrap;
 }
 
-function isColonnaGruppo(nome, nomeLogico) {
-  const colonna = trovaColonna(nomeLogico);
-  return colonna && colonna === nome;
-}
-
 function costruisciCampi(riga) {
   campiDinamici.innerHTML = "";
   const modificabili = colonneModificabili();
@@ -321,26 +336,27 @@ function costruisciCampi(riga) {
     label.className = "campo";
     const span = document.createElement("span");
     span.textContent = etichetta(nome);
-    const lungo = /note|descrizione|testo|contenuto|dettaglio|commento/i.test(nome);
-    const usaElenco = isColonnaGruppo(nome, "Sezione") || isColonnaGruppo(nome, "Portale");
-    const input = document.createElement(lungo ? "textarea" : "input");
-    if (!lungo) {
-      input.type = "text";
-      input.autocomplete = "off";
-    } else {
-      input.rows = 3;
-    }
-    input.name = nome;
-    if (!usaElenco) {
-      input.id = "campo-" + nome;
-    }
-    input.value = riga && riga[nome] != null ? String(riga[nome]) : "";
+    const tipo = tipoCampo(nome);
+    const valoreAttuale = riga ? valorePerCampo(nome, riga[nome]) : "";
 
     label.appendChild(span);
-    if (usaElenco) {
-      const valoreAttuale = riga && riga[nome] != null ? String(riga[nome]) : "";
+    if (usaCombo(nome) && tipo === "text") {
       label.appendChild(creaCombo(nome, valoreAttuale));
     } else {
+      const input = document.createElement(tipo === "textarea" ? "textarea" : "input");
+      if (tipo === "textarea") {
+        input.rows = 3;
+      } else {
+        input.type = tipo;
+        input.autocomplete = "off";
+        if (tipo === "number") {
+          input.step = "any";
+          input.inputMode = "decimal";
+        }
+      }
+      input.id = "campo-" + nome;
+      input.name = nome;
+      input.value = valoreAttuale;
       label.appendChild(input);
     }
     campiDinamici.appendChild(label);
@@ -351,8 +367,26 @@ function leggiForm() {
   const payload = {};
   colonneModificabili().forEach(function (nome) {
     const campo = document.getElementById("campo-" + nome);
-    payload[nome] = campo ? campo.value.trim() : "";
+    if (!campo) {
+      payload[nome] = "";
+      return;
+    }
+    const tipo = tipoCampo(nome);
+    const testo = campo.value.trim();
+    if (tipo === "number") {
+      if (!testo) {
+        payload[nome] = null;
+      } else {
+        const numero = Number(testo.replace(",", "."));
+        payload[nome] = Number.isFinite(numero) ? numero : testo;
+      }
+    } else {
+      payload[nome] = testo;
+    }
   });
+  if (nomeColonnaUtente && utenteId) {
+    payload[nomeColonnaUtente] = utenteId;
+  }
   return payload;
 }
 
@@ -377,47 +411,12 @@ function disegnaIntestazione() {
   testataColonne.appendChild(tr);
 }
 
-function applicaChiusure(forzaAperti) {
-  corpoTabella.querySelectorAll("[data-sezione]").forEach(function (riga) {
-    const sezione = riga.getAttribute("data-sezione");
-    const portale = riga.getAttribute("data-portale");
-    const tipo = riga.getAttribute("data-tipo");
-    let nascosta = false;
-
-    if (!forzaAperti) {
-      if (tipo !== "sezione" && sezioneChiusa(sezione)) {
-        nascosta = true;
-      }
-      if (tipo === "dati" && portaleChiuso(chiavePortale(sezione, portale))) {
-        nascosta = true;
-      }
-    }
-
-    riga.classList.toggle("riga-nascosta", nascosta);
-  });
-
-  corpoTabella.querySelectorAll(".riga-sezione button").forEach(function (bottone) {
-    const sezione = bottone.closest("tr").getAttribute("data-sezione");
-    const aperto = forzaAperti || !sezioneChiusa(sezione);
-    bottone.setAttribute("aria-expanded", aperto ? "true" : "false");
-    bottone.textContent = (aperto ? "▼ " : "▶ ") + sezione;
-  });
-
-  corpoTabella.querySelectorAll(".riga-portale button").forEach(function (bottone) {
-    const riga = bottone.closest("tr");
-    const chiave = chiavePortale(riga.getAttribute("data-sezione"), riga.getAttribute("data-portale"));
-    const aperto = forzaAperti || !portaleChiuso(chiave);
-    bottone.setAttribute("aria-expanded", aperto ? "true" : "false");
-    bottone.textContent = (aperto ? "▼ " : "▶ ") + riga.getAttribute("data-portale");
-  });
-}
-
 function disegnaTabella() {
   corpoTabella.innerHTML = "";
   disegnaIntestazione();
 
   const visibili = righeVisibili();
-  aggiornaStato();
+  mostraStato("");
 
   if (cacheRighe.length === 0) {
     const tr = document.createElement("tr");
@@ -425,7 +424,7 @@ function disegnaTabella() {
     td.colSpan = Math.max(colonneTabella().length, 1);
     td.className = "vuoto-cella";
     td.textContent =
-      "Nessuna riga visibile. Se in Table Editor ci sono dati, esegui sql/password-app.sql.";
+      "Nessuna riga visibile. Se in Table Editor ci sono dati, esegui sql/rifornimenti-app.sql.";
     tr.appendChild(td);
     corpoTabella.appendChild(tr);
     return;
@@ -442,74 +441,56 @@ function disegnaTabella() {
     return;
   }
 
-  const gruppi = raggruppaRighe(visibili);
-  const sezioni = Object.keys(gruppi).sort(confrontaTesto);
-  const numColonne = Math.max(colonneTabella().length, 1);
-
-  sezioni.forEach(function (sezione) {
-    const trSezione = document.createElement("tr");
-    trSezione.className = "riga-sezione";
-    trSezione.setAttribute("data-tipo", "sezione");
-    trSezione.setAttribute("data-sezione", sezione);
-    const tdSezione = document.createElement("td");
-    tdSezione.colSpan = numColonne;
-    const bottoneSezione = document.createElement("button");
-    bottoneSezione.type = "button";
-    bottoneSezione.textContent = "▼ " + sezione;
-    tdSezione.appendChild(bottoneSezione);
-    trSezione.appendChild(tdSezione);
-    corpoTabella.appendChild(trSezione);
-
-    const portali = Object.keys(gruppi[sezione]).sort(confrontaTesto);
-    portali.forEach(function (portale) {
-      const trPortale = document.createElement("tr");
-      trPortale.className = "riga-portale";
-      trPortale.setAttribute("data-tipo", "portale");
-      trPortale.setAttribute("data-sezione", sezione);
-      trPortale.setAttribute("data-portale", portale);
-      const tdPortale = document.createElement("td");
-      tdPortale.colSpan = numColonne;
-      const bottonePortale = document.createElement("button");
-      bottonePortale.type = "button";
-      bottonePortale.textContent = "▼ " + portale;
-      tdPortale.appendChild(bottonePortale);
-      trPortale.appendChild(tdPortale);
-      corpoTabella.appendChild(trPortale);
-
-      gruppi[sezione][portale].forEach(function (riga) {
-        const tr = document.createElement("tr");
-        tr.className = "riga-dati";
-        tr.setAttribute("data-tipo", "dati");
-        tr.setAttribute("data-id", riga.id);
-        tr.setAttribute("data-sezione", sezione);
-        tr.setAttribute("data-portale", portale);
-        colonneTabella().forEach(function (nome) {
-          const td = document.createElement("td");
-          td.textContent = testoCella(riga[nome]);
-          tr.appendChild(td);
-        });
-        corpoTabella.appendChild(tr);
-      });
+  visibili.forEach(function (riga) {
+    const tr = document.createElement("tr");
+    tr.className = "riga-dati";
+    tr.setAttribute("data-id", riga.id);
+    colonneTabella().forEach(function (nome) {
+      const td = document.createElement("td");
+      td.textContent = testoCella(nome, riga[nome]);
+      tr.appendChild(td);
     });
+    corpoTabella.appendChild(tr);
   });
-
-  applicaChiusure(!!testoRicerca());
 }
 
 async function caricaRighe() {
+  erroreCaricamento = "";
   mostraStato("");
-  const { data, error } = await getSupabase().from(NOME_TABELLA).select("*");
-  if (error) {
-    mostraStato(messaggioErrore(error));
-    return;
+  let ultimoErrore = null;
+
+  for (let i = 0; i < NOMI_TABELLA.length; i += 1) {
+    const prova = NOMI_TABELLA[i];
+    const { data, error } = await getSupabase().from(prova).select("*");
+    if (!error) {
+      nomeTabella = prova;
+      cacheRighe = data || [];
+      colonne = colonneDaRighe(cacheRighe);
+      nomeColonnaUtente = trovaColonna("user_id");
+      disegnaTabella();
+      return;
+    }
+    ultimoErrore = error;
+    if (!tabellaNonTrovata(error)) {
+      break;
+    }
   }
 
-  cacheRighe = data || [];
-  colonne = colonneDaRighe(cacheRighe);
-  disegnaTabella();
+  erroreCaricamento = messaggioTabella(ultimoErrore);
+  mostraStato(erroreCaricamento);
 }
 
 bottoneNuovo.addEventListener("click", function () {
+  if (erroreCaricamento) {
+    mostraStato(erroreCaricamento);
+    return;
+  }
+  if (colonneModificabili().length === 0) {
+    mostraStato(
+      "Mancano le colonne. Aggiungi almeno una riga in Table Editor (con Data, ecc.) e poi ricarica."
+    );
+    return;
+  }
   apriDialogo({}, true);
 });
 
@@ -548,7 +529,7 @@ bottoneElimina.addEventListener("click", async function () {
   if (!ok) {
     return;
   }
-  const cancellazione = await getSupabase().from(NOME_TABELLA).delete().eq("id", campoId.value);
+  const cancellazione = await tabellaApi().delete().eq("id", campoId.value);
   if (cancellazione.error) {
     mostraErroreForm(messaggioErrore(cancellazione.error));
     return;
@@ -558,21 +539,6 @@ bottoneElimina.addEventListener("click", async function () {
 });
 
 corpoTabella.addEventListener("click", function (evento) {
-  const bottoneGruppo = evento.target.closest(".riga-sezione button, .riga-portale button");
-  if (bottoneGruppo) {
-    const riga = bottoneGruppo.closest("tr");
-    const tipo = riga.getAttribute("data-tipo");
-    if (tipo === "sezione") {
-      const sezione = riga.getAttribute("data-sezione");
-      chiusiSezione[sezione] = sezioneChiusa(sezione) ? false : true;
-    } else {
-      const chiave = chiavePortale(riga.getAttribute("data-sezione"), riga.getAttribute("data-portale"));
-      chiusiPortale[chiave] = portaleChiuso(chiave) ? false : true;
-    }
-    applicaChiusure(!!testoRicerca());
-    return;
-  }
-
   const rigaDati = evento.target.closest("tr.riga-dati");
   if (!rigaDati) {
     return;
@@ -601,9 +567,9 @@ formRiga.addEventListener("submit", async function (evento) {
   let risultato;
 
   if (campoId.value) {
-    risultato = await getSupabase().from(NOME_TABELLA).update(payload).eq("id", campoId.value);
+    risultato = await tabellaApi().update(payload).eq("id", campoId.value);
   } else {
-    risultato = await getSupabase().from(NOME_TABELLA).insert(payload);
+    risultato = await tabellaApi().insert(payload);
   }
 
   bottoneSalva.disabled = false;
@@ -624,15 +590,11 @@ bottoneEsci.addEventListener("click", async function () {
 
 async function avvia() {
   try {
-    const daAgenda = String(document.referrer || "").indexOf("agenda.html") !== -1;
-    if (daAgenda) {
-      window.location.replace("dati.html");
-      return;
-    }
     const utente = await assicuratiLogin();
     if (!utente) {
       return;
     }
+    utenteId = utente.id;
     emailUtente.textContent = utente.email || "Utente collegato";
     await caricaRighe();
   } catch (error) {
