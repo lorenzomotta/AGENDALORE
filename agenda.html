@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta name="theme-color" content="#1f6b5a" />
+    <meta name="theme-color" content="#1e4d28" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <title>Agenda · AgendaLore</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -15,68 +15,199 @@
     <link rel="stylesheet" href="css/agenda.css" />
   </head>
   <body>
-    <header class="testata">
-      <div>
-        <p class="brand">AgendaLore</p>
-        <p id="email-utente" class="email-utente">...</p>
-      </div>
-      <div class="azioni-testata">
-        <a class="bottone-secondario" href="password.html">Dati</a>
-        <button id="bottone-esci" class="bottone-secondario" type="button">Esci</button>
-      </div>
+    <header class="barra-superiore">
+      <button class="bottone-vista" type="button" data-vista="cerca">Cerca</button>
+      <button class="bottone-vista" type="button" data-vista="mese">Mese</button>
+      <button class="bottone-vista" type="button" data-vista="settimana">Settimana</button>
+      <button class="bottone-vista attivo" type="button" data-vista="giorno" aria-pressed="true">
+        Giorno
+      </button>
     </header>
 
-    <main class="contenuto">
-      <section class="filtri" aria-label="Filtro date">
-        <label class="campo-data">
-          <span>Giorno</span>
-          <input id="filtro-data" type="date" />
-        </label>
-        <button id="bottone-oggi" class="bottone-secondario" type="button">Oggi</button>
-        <button id="bottone-tutti" class="bottone-secondario" type="button">Tutti</button>
-      </section>
+    <p class="riga-utente">
+      <span id="email-utente">...</span>
+      <a class="link-dati" href="password.html">Dati</a>
+    </p>
 
-      <p id="stato" class="stato" role="status">Caricamento...</p>
-      <ul id="lista-appuntamenti" class="lista"></ul>
+    <main class="contenuto">
+      <section class="scheda-agenda">
+        <label id="blocco-cerca" class="campo-ricerca" hidden>
+          <span class="sr-only">Cerca appuntamenti</span>
+          <input
+            id="campo-ricerca"
+            type="search"
+            placeholder="Cerca in tutti i campi"
+            autocomplete="off"
+          />
+        </label>
+
+        <div id="blocco-calendario">
+          <h1 id="etichetta-periodo" class="etichetta-periodo" title="Tocca per scegliere una data"></h1>
+          <label class="campo-data">
+            <span class="sr-only">Seleziona data</span>
+            <input id="filtro-data" type="date" />
+          </label>
+
+          <div class="barre-navigazione" aria-label="Spostamento date">
+            <button id="bottone-indietro" class="bottone-nav" type="button" aria-label="Indietro">‹</button>
+            <button id="bottone-oggi" type="button">Oggi</button>
+            <button id="bottone-avanti" class="bottone-nav" type="button" aria-label="Avanti">›</button>
+          </div>
+
+          <p id="etichetta-giorno" class="barra-giorno"></p>
+        </div>
+        <p id="stato" class="stato" role="status"></p>
+        <div id="area-vista" class="area-lista"></div>
+      </section>
     </main>
 
-    <button id="bottone-nuovo" class="fab" type="button" aria-label="Nuovo appuntamento">
-      +
-    </button>
+    <footer class="barra-inferiore">
+      <button id="bottone-esci" class="bottone-esci" type="button">Esci</button>
+      <button id="bottone-nuovo" class="bottone-aggiungi" type="button">Aggiungi</button>
+    </footer>
 
-    <dialog id="dialogo" class="dialogo">
-      <form id="form-appuntamento" method="dialog">
+    <dialog id="dialogo-dettaglio" class="dialogo dialogo-con-footer">
+      <div class="dialogo-corpo">
+        <div class="dettaglio-testata">
+          <p id="dettaglio-quando"></p>
+          <p id="dettaglio-visibilita"></p>
+        </div>
+        <p id="dettaglio-tipo" class="dettaglio-tipo"></p>
+        <p class="riga-dettaglio">
+          <span class="etichetta-dettaglio">Oggetto:</span>
+          <span id="dettaglio-titolo"></span>
+        </p>
+        <p class="riga-dettaglio">
+          <span class="etichetta-dettaglio">Interlocutore:</span>
+          <span id="dettaglio-interlocutore"></span>
+        </p>
+        <p class="riga-dettaglio">
+          <span class="etichetta-dettaglio">Esecutore:</span>
+          <span id="dettaglio-esecutore"></span>
+        </p>
+        <p class="riga-dettaglio">
+          <span class="etichetta-dettaglio">Note:</span>
+          <span id="dettaglio-note"></span>
+        </p>
+        <p class="riga-dettaglio">
+          <span class="etichetta-dettaglio">Telefono:</span>
+          <span id="dettaglio-telefono"></span>
+        </p>
+        <p class="riga-dettaglio">
+          <span class="etichetta-dettaglio">Email:</span>
+          <span id="dettaglio-email"></span>
+        </p>
+      </div>
+      <div class="dialogo-footer">
+        <div id="dettaglio-azioni" class="azioni-dialogo">
+          <button id="dettaglio-cancella" class="bottone-pericolo" type="button">Cancella</button>
+          <button id="dettaglio-modifica" class="bottone-principale" type="button">Modifica</button>
+        </div>
+        <button id="dettaglio-chiudi" class="bottone-secondario bottone-chiudi" type="button">Chiudi</button>
+      </div>
+    </dialog>
+
+    <dialog id="dialogo" class="dialogo dialogo-con-footer">
+      <form id="form-appuntamento">
         <h2 id="titolo-dialogo">Nuovo appuntamento</h2>
-
-        <input id="id-appuntamento" type="hidden" />
-
-        <label class="campo">
-          <span>Titolo</span>
-          <input id="titolo" name="titolo" type="text" required maxlength="80" placeholder="Es. Dentista" />
-        </label>
-
-        <label class="campo">
-          <span>Data</span>
-          <input id="data" name="data" type="date" required />
-        </label>
-
-        <label class="campo">
-          <span>Ora (facoltativa)</span>
-          <input id="ora" name="ora" type="time" />
-        </label>
-
-        <label class="campo">
-          <span>Note (facoltative)</span>
-          <textarea id="note" name="note" rows="3" maxlength="300" placeholder="Dettagli utili"></textarea>
-        </label>
-
-        <p id="errore-form" class="messaggio errore" hidden></p>
-
-        <div class="azioni-dialogo">
-          <button id="bottone-annulla" class="bottone-secondario" type="button">Annulla</button>
-          <button id="bottone-salva" class="bottone-principale" type="submit">Salva</button>
+        <div class="dialogo-corpo">
+          <input id="id-appuntamento" type="hidden" />
+          <label class="campo">
+            <span>Tipo appuntamento</span>
+            <div class="combo">
+              <input
+                id="tipo-appuntamento"
+                name="tipo-appuntamento"
+                type="text"
+                required
+                maxlength="80"
+                autocomplete="off"
+                placeholder="Tocca per scegliere, oppure scrivi un nome nuovo"
+              />
+              <ul id="lista-tipo-appuntamento" class="combo-lista" hidden></ul>
+            </div>
+          </label>
+          <label class="campo">
+            <span>Titolo</span>
+            <input id="titolo" name="titolo" type="text" required maxlength="80" placeholder="Es. Dentista" />
+          </label>
+          <label class="campo">
+            <span>Interlocutore (facoltativo)</span>
+            <div class="combo">
+              <input
+                id="interlocutore"
+                name="interlocutore"
+                type="text"
+                maxlength="80"
+                autocomplete="off"
+                placeholder="Tocca per scegliere, oppure scrivi un nome nuovo"
+              />
+              <ul id="lista-interlocutore" class="combo-lista" hidden></ul>
+            </div>
+          </label>
+          <label class="campo">
+            <span>Data</span>
+            <input id="data" name="data" type="date" required />
+          </label>
+          <label class="campo">
+            <span>Ora (facoltativa)</span>
+            <input id="ora" name="ora" type="time" />
+          </label>
+          <label class="campo">
+            <span>Esecutore (facoltativo)</span>
+            <div class="combo">
+              <input
+                id="esecutore"
+                name="esecutore"
+                type="text"
+                maxlength="80"
+                autocomplete="off"
+                placeholder="Tocca per scegliere, oppure scrivi un nome nuovo"
+              />
+              <ul id="lista-esecutore" class="combo-lista" hidden></ul>
+            </div>
+          </label>
+          <label class="campo">
+            <span>Note (facoltative)</span>
+            <textarea id="note" name="note" rows="3" maxlength="300" placeholder="Dettagli utili"></textarea>
+          </label>
+          <label class="campo">
+            <span>Telefono (facoltativo)</span>
+            <input id="telefono" name="telefono" type="tel" maxlength="40" placeholder="Es. 333 1234567" />
+          </label>
+          <label class="campo">
+            <span>Email (facoltativa)</span>
+            <input id="email-appuntamento" name="email-appuntamento" type="text" maxlength="120" placeholder="Es.  mario@email.com" />
+          </label>
+          <label class="campo campo-check">
+            <input id="tutti" name="tutti" type="checkbox" />
+            <span>Tutti (visibile a ogni utente dell’app)</span>
+          </label>
+          <p id="errore-form" class="messaggio errore" hidden></p>
+        </div>
+        <div class="dialogo-footer">
+          <div class="azioni-dialogo">
+            <button id="bottone-annulla" class="bottone-secondario" type="button">Annulla</button>
+            <button id="bottone-salva" class="bottone-principale" type="submit">Salva</button>
+          </div>
         </div>
       </form>
+    </dialog>
+
+    <dialog id="dialogo-cancella" class="dialogo">
+      <p class="domanda-tutti">Vuoi cancellare questo appuntamento?</p>
+      <div class="azioni-dialogo">
+        <button id="cancella-no" class="bottone-secondario" type="button">NO</button>
+        <button id="cancella-si" class="bottone-pericolo" type="button">SÌ</button>
+      </div>
+    </dialog>
+
+    <dialog id="dialogo-tutti" class="dialogo">
+      <p class="domanda-tutti">Vuoi renderlo visibile a tutti?</p>
+      <div class="azioni-dialogo">
+        <button id="tutti-no" class="bottone-secondario" type="button">NO</button>
+        <button id="tutti-si" class="bottone-principale" type="button">SÌ</button>
+      </div>
     </dialog>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>

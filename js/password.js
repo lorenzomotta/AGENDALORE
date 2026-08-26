@@ -147,18 +147,18 @@ function righeVisibili() {
   });
 }
 
-function aggiornaStato(quanteVisibili) {
-  const query = testoRicerca();
-  if (!cacheRighe.length) {
+function mostraStato(testo) {
+  if (!testo) {
+    stato.hidden = true;
     stato.textContent = "";
     return;
   }
-  if (query) {
-    stato.textContent =
-      quanteVisibili + " risultati su " + cacheRighe.length + " per «" + campoRicerca.value.trim() + "»";
-    return;
-  }
-  stato.textContent = cacheRighe.length + " righe, raggruppate per Sezione e Portale";
+  stato.hidden = false;
+  stato.textContent = testo;
+}
+
+function aggiornaStato() {
+  mostraStato("");
 }
 
 function raggruppaRighe(righe) {
@@ -204,6 +204,105 @@ function aggiornaBarraAzioni() {
   titoloDialogo.textContent = nuovaRiga ? "Nuova riga" : inModifica ? "Modifica riga" : "Dettaglio";
 }
 
+function valoriUniciColonna(nomeColonna, sezioneFiltro) {
+  const colSezione = trovaColonna("Sezione");
+  const visti = {};
+  cacheRighe.forEach(function (riga) {
+    if (
+      sezioneFiltro &&
+      colSezione &&
+      String(riga[colSezione] || "") !== sezioneFiltro
+    ) {
+      return;
+    }
+    const valore = riga[nomeColonna];
+    if (valore === null || valore === undefined || String(valore).trim() === "") {
+      return;
+    }
+    visti[String(valore)] = true;
+  });
+  return Object.keys(visti).sort(confrontaTesto);
+}
+
+function creaCombo(nome, valoreAttuale) {
+  const wrap = document.createElement("div");
+  wrap.className = "combo";
+
+  const input = document.createElement("input");
+  input.type = "text";
+  input.id = "campo-" + nome;
+  input.name = nome;
+  input.autocomplete = "off";
+  input.value = valoreAttuale || "";
+  input.placeholder = "Tocca per scegliere, oppure scrivi un nome nuovo";
+
+  const lista = document.createElement("ul");
+  lista.className = "combo-lista";
+  lista.hidden = true;
+
+  function disegnaOpzioni(filtro) {
+    const tutti = valoriUniciColonna(nome, "");
+    const q = (filtro || "").trim().toLowerCase();
+    lista.innerHTML = "";
+
+    tutti.forEach(function (valore) {
+      if (q && valore.toLowerCase().indexOf(q) === -1) {
+        return;
+      }
+      const voce = document.createElement("li");
+      voce.textContent = valore;
+      voce.addEventListener("mousedown", function (evento) {
+        evento.preventDefault();
+        input.value = valore;
+        lista.hidden = true;
+      });
+      lista.appendChild(voce);
+    });
+
+    const scritto = (filtro || "").trim();
+    const giaCè = tutti.some(function (valore) {
+      return valore.toLowerCase() === scritto.toLowerCase();
+    });
+    if (scritto && !giaCè) {
+      const voceNuova = document.createElement("li");
+      voceNuova.className = "combo-nuova";
+      voceNuova.textContent = "Aggiungi «" + scritto + "»";
+      voceNuova.addEventListener("mousedown", function (evento) {
+        evento.preventDefault();
+        input.value = scritto;
+        lista.hidden = true;
+      });
+      lista.appendChild(voceNuova);
+    }
+
+    lista.hidden = lista.childNodes.length === 0;
+  }
+
+  input.addEventListener("focus", function () {
+    if (input.disabled) {
+      return;
+    }
+    disegnaOpzioni("");
+  });
+  input.addEventListener("input", function () {
+    disegnaOpzioni(input.value);
+  });
+  input.addEventListener("blur", function () {
+    window.setTimeout(function () {
+      lista.hidden = true;
+    }, 180);
+  });
+
+  wrap.appendChild(input);
+  wrap.appendChild(lista);
+  return wrap;
+}
+
+function isColonnaGruppo(nome, nomeLogico) {
+  const colonna = trovaColonna(nomeLogico);
+  return colonna && colonna === nome;
+}
+
 function costruisciCampi(riga) {
   campiDinamici.innerHTML = "";
   const modificabili = colonneModificabili();
@@ -223,17 +322,27 @@ function costruisciCampi(riga) {
     const span = document.createElement("span");
     span.textContent = etichetta(nome);
     const lungo = /note|descrizione|testo|contenuto|dettaglio|commento/i.test(nome);
+    const usaElenco = isColonnaGruppo(nome, "Sezione") || isColonnaGruppo(nome, "Portale");
     const input = document.createElement(lungo ? "textarea" : "input");
     if (!lungo) {
       input.type = "text";
+      input.autocomplete = "off";
     } else {
       input.rows = 3;
     }
     input.name = nome;
-    input.id = "campo-" + nome;
+    if (!usaElenco) {
+      input.id = "campo-" + nome;
+    }
     input.value = riga && riga[nome] != null ? String(riga[nome]) : "";
+
     label.appendChild(span);
-    label.appendChild(input);
+    if (usaElenco) {
+      const valoreAttuale = riga && riga[nome] != null ? String(riga[nome]) : "";
+      label.appendChild(creaCombo(nome, valoreAttuale));
+    } else {
+      label.appendChild(input);
+    }
     campiDinamici.appendChild(label);
   });
 }
@@ -242,7 +351,7 @@ function leggiForm() {
   const payload = {};
   colonneModificabili().forEach(function (nome) {
     const campo = document.getElementById("campo-" + nome);
-    payload[nome] = campo ? campo.value : "";
+    payload[nome] = campo ? campo.value.trim() : "";
   });
   return payload;
 }
@@ -308,7 +417,7 @@ function disegnaTabella() {
   disegnaIntestazione();
 
   const visibili = righeVisibili();
-  aggiornaStato(visibili.length);
+  aggiornaStato();
 
   if (cacheRighe.length === 0) {
     const tr = document.createElement("tr");
@@ -388,10 +497,10 @@ function disegnaTabella() {
 }
 
 async function caricaRighe() {
-  stato.textContent = "Caricamento...";
+  mostraStato("");
   const { data, error } = await getSupabase().from(NOME_TABELLA).select("*");
   if (error) {
-    stato.textContent = messaggioErrore(error);
+    mostraStato(messaggioErrore(error));
     return;
   }
 
@@ -522,7 +631,7 @@ async function avvia() {
     emailUtente.textContent = utente.email || "Utente collegato";
     await caricaRighe();
   } catch (error) {
-    stato.textContent = messaggioErrore(error);
+    mostraStato(messaggioErrore(error));
   }
 }
 
