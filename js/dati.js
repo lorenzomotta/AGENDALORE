@@ -4,11 +4,15 @@
  * I pulsanti vengono messi in ordine alfabetico da soli.
  */
 const TABELLE = [
+  { nome: "CartellaClinica", pagina: "cartella-clinica.html" },
   { nome: "Compleanni", pagina: "compleanni.html" },
   { nome: "Entrate", pagina: "entrate.html" },
+  { nome: "Evaquazioni", pagina: "evaquazioni.html" },
   { nome: "NotaVolante", pagina: "nota-volante.html" },
+  { nome: "Ospedali", pagina: "ospedali.html" },
   { nome: "Password", pagina: "password.html" },
   { nome: "Rifornimenti", pagina: "rifornimenti.html" },
+  { nome: "Sogni", pagina: "sogni.html" },
   { nome: "Spesa", pagina: "spesa.html" },
 ];
 

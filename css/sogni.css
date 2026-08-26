@@ -1,0 +1,413 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  font-family: "Source Sans 3", "Segoe UI", sans-serif;
+  color: #1c241f;
+  background: #f4f1ea;
+  min-height: 100dvh;
+  padding-bottom: calc(80px + env(safe-area-inset-bottom));
+}
+
+.testata {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: calc(14px + env(safe-area-inset-top)) 16px 14px;
+  background: #1f6b5a;
+  color: #fff;
+}
+
+.brand {
+  margin: 0;
+  font-weight: 700;
+  font-size: 1.15rem;
+}
+
+.email-utente {
+  margin: 2px 0 0;
+  font-size: 0.85rem;
+  opacity: 0.86;
+  word-break: break-all;
+}
+
+.testata > div:first-child {
+  min-width: 0;
+}
+
+.azioni-testata {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.contenuto {
+  padding: 16px;
+}
+
+.campo-ricerca {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.campo-ricerca input {
+  width: 100%;
+  border: 1px solid #d5d0c6;
+  background: #fff;
+  border-radius: 12px;
+  padding: 12px 14px;
+  font: inherit;
+  font-weight: 400;
+  min-height: 46px;
+}
+
+.campo-ricerca input:focus {
+  outline: 2px solid #1f6b5a;
+  border-color: #1f6b5a;
+}
+
+.stato {
+  margin: 0 0 12px;
+  color: #5b665f;
+}
+
+.tabella-wrap {
+  overflow-x: auto;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 8px 20px rgba(28, 36, 31, 0.06);
+}
+
+#tabella-sogni {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 0;
+  table-layout: auto;
+  font-size: 0.95rem;
+}
+
+#tabella-sogni th,
+#tabella-sogni td {
+  padding: 10px 12px;
+  text-align: left;
+  border-bottom: 1px solid #ece7dd;
+  vertical-align: top;
+  word-break: break-word;
+}
+
+#tabella-sogni thead th {
+  background: #e8f3ee;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.riga-dati {
+  cursor: pointer;
+}
+
+.riga-dati:hover {
+  background: #f7f4ee;
+}
+
+#tabella-sogni th.cella-data,
+#tabella-sogni td.cella-data {
+  width: 1px;
+  white-space: nowrap;
+  padding-left: 8px;
+  padding-right: 8px;
+  font-variant-numeric: tabular-nums;
+  word-break: keep-all;
+  overflow: visible;
+}
+
+#tabella-sogni th.cella-descrizione,
+#tabella-sogni td.cella-descrizione {
+  width: 99%;
+}
+
+.cella-descrizione {
+  white-space: pre-wrap;
+  line-height: 1.35;
+}
+
+.vuoto-cella {
+  padding: 28px 16px;
+  text-align: center;
+  color: #5b665f;
+}
+
+.bottone-secondario,
+.bottone-pericolo,
+.bottone-icona,
+.bottone-spunta {
+  border: 0;
+  border-radius: 12px;
+  min-height: 44px;
+  padding: 0 14px;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+a.bottone-secondario {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+}
+
+.bottone-secondario {
+  background: rgba(255, 255, 255, 0.16);
+  color: inherit;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+}
+
+.dialogo .bottone-secondario {
+  background: #ece7dd;
+  color: #1c241f;
+  border: 0;
+}
+
+.bottone-pericolo {
+  background: #fde8e4;
+  color: #8a2b16;
+}
+
+.bottone-icona,
+.bottone-spunta {
+  width: 52px;
+  min-width: 52px;
+  padding: 0;
+  background: transparent;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bottone-icona:disabled,
+.bottone-spunta:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+
+.campo input:disabled,
+.campo textarea:disabled,
+.campo select:disabled {
+  background: #f1eee8;
+  color: #1c241f;
+}
+
+.barra-inferiore {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 12;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  padding: 8px 10px calc(8px + env(safe-area-inset-bottom));
+  background: #f4f1ea;
+  border-top: 1px solid #d5d0c6;
+}
+
+.bottone-esci,
+.bottone-aggiungi {
+  width: 100%;
+  border: 1px solid #3a3a3a;
+  border-radius: 8px;
+  min-height: 40px;
+  padding: 0 6px;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.bottone-esci {
+  background: #4a4a4a;
+  color: #fff;
+}
+
+.bottone-aggiungi {
+  background: #e07a3d;
+  color: #fff;
+  border-color: #c9652e;
+}
+
+.dialogo {
+  width: min(100% - 24px, 420px);
+  max-height: min(90vh, 720px);
+  overflow-y: auto;
+  border: 0;
+  border-radius: 20px;
+  padding: 20px;
+  background: #f7f4ee;
+}
+
+.dialogo::backdrop {
+  background: rgba(20, 32, 28, 0.45);
+}
+
+.dialogo h2 {
+  margin: 0 0 16px;
+}
+
+.campo {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 12px;
+  font-size: 0.92rem;
+  font-weight: 600;
+}
+
+.campo input,
+.campo textarea,
+.campo select {
+  width: 100%;
+  border: 1px solid #d5d0c6;
+  background: #fff;
+  border-radius: 12px;
+  padding: 12px;
+  font: inherit;
+  font-weight: 400;
+  min-height: 46px;
+}
+
+.combo {
+  position: relative;
+}
+
+.combo-lista {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(100% - 4px);
+  z-index: 8;
+  max-height: 200px;
+  overflow-y: auto;
+  margin: 0;
+  padding: 4px 0;
+  list-style: none;
+  background: #fff;
+  border: 1px solid #d5d0c6;
+  border-radius: 12px;
+  box-shadow: 0 8px 18px rgba(28, 36, 31, 0.12);
+}
+
+.combo-lista li {
+  padding: 10px 12px;
+  font-weight: 400;
+  cursor: pointer;
+}
+
+.combo-lista li:hover,
+.combo-nuova {
+  background: #e8f3ee;
+}
+
+.campo textarea {
+  min-height: 90px;
+  resize: vertical;
+}
+
+.messaggio {
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 0.92rem;
+}
+
+.messaggio.errore {
+  background: #fde8e4;
+  color: #8a2b16;
+}
+
+.azioni-dialogo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.azioni-dialogo .bottone-secondario,
+.azioni-dialogo .bottone-pericolo {
+  flex: 1;
+}
+
+@media (max-width: 600px) {
+  .testata {
+    gap: 8px;
+    padding: calc(10px + env(safe-area-inset-top)) 8px 10px;
+  }
+
+  .brand {
+    font-size: 0.95rem;
+  }
+
+  .email-utente {
+    font-size: 0.72rem;
+  }
+
+  .azioni-testata {
+    gap: 6px;
+  }
+
+  .azioni-testata .bottone-secondario {
+    min-height: 36px;
+    padding: 0 8px;
+    font-size: 0.78rem;
+  }
+
+  .contenuto {
+    padding: 8px;
+  }
+
+  .tabella-wrap {
+    overflow-x: hidden;
+  }
+
+  #tabella-sogni {
+    min-width: 0;
+    width: 100%;
+    table-layout: auto;
+    font-size: 0.88rem;
+  }
+
+  #tabella-sogni th,
+  #tabella-sogni td {
+    padding: 8px 6px;
+  }
+
+  #tabella-sogni th.cella-data,
+  #tabella-sogni td.cella-data {
+    padding-left: 8px;
+    padding-right: 8px;
+    white-space: nowrap;
+  }
+
+  #tabella-sogni thead th {
+    white-space: nowrap;
+    font-size: 0.78rem;
+    line-height: 1.15;
+  }
+}

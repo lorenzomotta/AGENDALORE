@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="it">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#1f6b5a" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <title>Tabella CartellaClinica · AGENDA</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="css/cartella-clinica.css?v=scroll" />
+  </head>
+  <body>
+    <header class="testata">
+      <div>
+        <p class="brand">Tabella CartellaClinica</p>
+        <p id="email-utente" class="email-utente">...</p>
+      </div>
+      <div class="azioni-testata">
+        <a class="bottone-secondario" href="dati.html">Dati</a>
+        <a class="bottone-secondario" href="agenda.html">Agenda</a>
+      </div>
+    </header>
+
+    <main class="contenuto">
+      <label class="campo-ricerca">
+        <span>Cerca</span>
+        <input
+          id="campo-ricerca"
+          type="search"
+          placeholder="Cerca in tutte le colonne"
+          autocomplete="off"
+        />
+      </label>
+      <p id="stato" class="stato" role="status" hidden></p>
+      <div class="tabella-wrap">
+        <table id="tabella-cartella-clinica">
+          <thead id="testata-colonne"></thead>
+          <tbody id="corpo-tabella"></tbody>
+        </table>
+      </div>
+    </main>
+
+    <footer class="barra-inferiore">
+      <button id="bottone-esci" class="bottone-esci" type="button">Esci</button>
+      <button id="bottone-nuovo" class="bottone-aggiungi" type="button">Aggiungi</button>
+    </footer>
+
+    <dialog id="dialogo" class="dialogo">
+      <form id="form-riga">
+        <h2 id="titolo-dialogo" tabindex="-1">Dettaglio</h2>
+        <input id="id-riga" type="hidden" />
+        <div id="campi-dinamici"></div>
+        <p id="errore-form" class="messaggio errore" hidden></p>
+        <div class="azioni-dialogo">
+          <button id="bottone-annulla" class="bottone-secondario" type="button">Chiudi</button>
+          <button id="bottone-elimina" class="bottone-pericolo" type="button" hidden>Elimina</button>
+          <button id="bottone-matita" class="bottone-icona" type="button" aria-label="Modifica" title="Modifica">
+            <svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true">
+              <path
+                d="M4 17.3V20h2.7l8-8-2.7-2.7-8 8zM18.7 7.3a.7.7 0 0 0 0-1l-1.9-1.9a.7.7 0 0 0-1 0l-1.5 1.5 2.9 2.9 1.5-1.5z"
+                fill="#1f6b5a"
+              />
+            </svg>
+          </button>
+          <button id="bottone-salva" class="bottone-spunta" type="submit" aria-label="Salva" title="Salva" hidden>
+            <svg viewBox="0 0 24 24" width="28" height="28" aria-hidden="true">
+              <circle cx="12" cy="12" r="11" fill="#2e9d57" />
+              <path
+                d="M7 12.5l3.2 3.2L17 8.8"
+                fill="none"
+                stroke="#fff"
+                stroke-width="2.4"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </button>
+        </div>
+      </form>
+    </dialog>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/config.js"></script>
+    <script src="js/supabase-client.js"></script>
+    <script src="js/cartella-clinica.js?v=scroll"></script>
+  </body>
+</html>
