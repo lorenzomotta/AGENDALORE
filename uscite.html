@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="it">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#1f6b5a" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <title>Uscite · AgendaLore</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="css/uscite.css?v=1" />
+  </head>
+  <body>
+    <header class="testata">
+      <div>
+        <p class="brand">Uscite</p>
+        <p id="email-utente" class="email-utente">...</p>
+      </div>
+      <div class="azioni-testata">
+        <a class="bottone-secondario" href="dati.html">Dati</a>
+        <a class="bottone-secondario" href="agenda.html">Agenda</a>
+      </div>
+    </header>
+
+    <main class="contenuto">
+      <p class="introduzione">Eventi agenda con stato pagamento PAGATO.</p>
+      <label class="campo-ricerca">
+        <span>Cerca</span>
+        <input
+          id="campo-ricerca"
+          type="search"
+          placeholder="Cerca titolo, data, importo..."
+          autocomplete="off"
+        />
+      </label>
+      <p id="stato" class="stato" role="status" hidden></p>
+      <div class="tabella-wrap">
+        <table id="tabella-uscite">
+          <thead id="testata-colonne"></thead>
+          <tbody id="corpo-tabella"></tbody>
+        </table>
+      </div>
+    </main>
+
+    <footer class="barra-inferiore">
+      <button id="bottone-esci" class="bottone-esci" type="button">Esci</button>
+    </footer>
+
+    <dialog id="dialogo" class="dialogo">
+      <h2 id="titolo-dialogo">Dettaglio</h2>
+      <p class="riga-dettaglio">
+        <span class="etichetta-dettaglio">Quando:</span>
+        <span id="dettaglio-quando"></span>
+      </p>
+      <p class="riga-dettaglio">
+        <span class="etichetta-dettaglio">Oggetto:</span>
+        <span id="dettaglio-titolo"></span>
+      </p>
+      <p class="riga-dettaglio">
+        <span class="etichetta-dettaglio">Tipo:</span>
+        <span id="dettaglio-tipo"></span>
+      </p>
+      <p class="riga-dettaglio">
+        <span class="etichetta-dettaglio">Interlocutore:</span>
+        <span id="dettaglio-interlocutore"></span>
+      </p>
+      <p class="riga-dettaglio">
+        <span class="etichetta-dettaglio">Esecutore:</span>
+        <span id="dettaglio-esecutore"></span>
+      </p>
+      <p class="riga-dettaglio">
+        <span class="etichetta-dettaglio">Importo:</span>
+        <span id="dettaglio-importo"></span>
+      </p>
+      <p class="riga-dettaglio">
+        <span class="etichetta-dettaglio">Stato pagamento:</span>
+        <span id="dettaglio-stato"></span>
+      </p>
+      <p class="riga-dettaglio">
+        <span class="etichetta-dettaglio">Note:</span>
+        <span id="dettaglio-note"></span>
+      </p>
+      <div class="azioni-dialogo">
+        <button id="bottone-chiudi" class="bottone-secondario" type="button">Chiudi</button>
+      </div>
+    </dialog>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/config.js"></script>
+    <script src="js/supabase-client.js"></script>
+    <script src="js/uscite.js?v=2"></script>
+  </body>
+</html>
