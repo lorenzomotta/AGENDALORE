@@ -123,12 +123,14 @@ body {
   white-space: nowrap;
 }
 
-#tabella-uscite .riga-anno td {
+#tabella-uscite .riga-anno td,
+#tabella-uscite .riga-mese td {
   border-bottom: 0;
   padding: 6px 8px;
 }
 
-.riga-anno button {
+.riga-anno button,
+.riga-mese button {
   width: 100%;
   border: 0;
   display: flex;
@@ -142,8 +144,18 @@ body {
   min-height: 40px;
   padding: 8px 10px;
   border-radius: 8px;
+}
+
+.riga-anno button {
   background: #1f6b5a;
   color: #fff;
+}
+
+.riga-mese button {
+  background: #dceee6;
+  color: #143f36;
+  margin-left: 10px;
+  width: calc(100% - 10px);
 }
 
 .gruppo-nome {
@@ -332,14 +344,21 @@ a.bottone-secondario {
     line-height: 1.15;
   }
 
-  #tabella-uscite .riga-anno td {
+  #tabella-uscite .riga-anno td,
+  #tabella-uscite .riga-mese td {
     padding: 4px;
   }
 
-  .riga-anno button {
+  .riga-anno button,
+  .riga-mese button {
     min-height: 34px;
     padding: 6px 8px;
     font-size: 0.78rem;
     gap: 8px;
+  }
+
+  .riga-mese button {
+    margin-left: 6px;
+    width: calc(100% - 6px);
   }
 }

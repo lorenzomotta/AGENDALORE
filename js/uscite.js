@@ -1,4 +1,18 @@
 const COLONNE_TABELLA = ["Data", "Oggetto", "Interlocutore", "Importo"];
+const MESI = [
+  "gennaio",
+  "febbraio",
+  "marzo",
+  "aprile",
+  "maggio",
+  "giugno",
+  "luglio",
+  "agosto",
+  "settembre",
+  "ottobre",
+  "novembre",
+  "dicembre",
+];
 
 const emailUtente = document.getElementById("email-utente");
 const bottoneEsci = document.getElementById("bottone-esci");
@@ -20,6 +34,7 @@ const bottoneChiudi = document.getElementById("bottone-chiudi");
 
 let cacheRighe = [];
 const chiusiAnno = {};
+const chiusiMese = {};
 
 function valoreColonna(riga, nomeLogico) {
   if (!riga) {
@@ -84,6 +99,27 @@ function annoDellaRiga(riga) {
   return annoDaIso(isoDaValoreData(riga.data));
 }
 
+function meseChiave(riga) {
+  const iso = isoDaValoreData(riga.data);
+  if (!iso) {
+    return "00";
+  }
+  return iso.slice(5, 7) || "00";
+}
+
+function etichettaMese(chiave) {
+  const numero = Number(chiave);
+  if (!numero || numero < 1 || numero > 12) {
+    return "(senza mese)";
+  }
+  const nome = MESI[numero - 1];
+  return nome.charAt(0).toUpperCase() + nome.slice(1);
+}
+
+function chiaveGruppoMese(anno, mese) {
+  return String(anno) + "|" + String(mese);
+}
+
 function numeroDaValore(valore) {
   if (valore === null || valore === undefined || valore === "") {
     return 0;
@@ -146,6 +182,7 @@ function rigaCorrisponde(riga, query) {
     formattaEuro(importoRiga(riga)),
     valoreColonna(riga, "StatoPagamento"),
     valoreColonna(riga, "note"),
+    etichettaMese(meseChiave(riga)),
   ];
   return pezzi.join(" ").toLowerCase().includes(query);
 }
@@ -153,11 +190,11 @@ function rigaCorrisponde(riga, query) {
 function confrontaPerAnnoEData(a, b) {
   const isoA = isoDaValoreData(a.data);
   const isoB = isoDaValoreData(b.data);
-  const perData = isoA.localeCompare(isoB);
+  const perData = isoB.localeCompare(isoA);
   if (perData !== 0) {
     return perData;
   }
-  return formattaOra(a.ora).localeCompare(formattaOra(b.ora));
+  return formattaOra(b.ora).localeCompare(formattaOra(a.ora));
 }
 
 function righeVisibili() {
@@ -177,14 +214,18 @@ function sommaImporti(righe) {
   }, 0);
 }
 
-function raggruppaPerAnno(righe) {
+function raggruppaPerAnnoEMese(righe) {
   const anni = {};
   righe.forEach(function (riga) {
     const anno = annoDellaRiga(riga);
+    const mese = meseChiave(riga);
     if (!anni[anno]) {
-      anni[anno] = [];
+      anni[anno] = {};
     }
-    anni[anno].push(riga);
+    if (!anni[anno][mese]) {
+      anni[anno][mese] = [];
+    }
+    anni[anno][mese].push(riga);
   });
   return anni;
 }
@@ -197,12 +238,28 @@ function ordinaAnni(elenco) {
     if (b === "(senza anno)") {
       return -1;
     }
-    return String(a).localeCompare(String(b), "it", { numeric: true });
+    return String(b).localeCompare(String(a), "it", { numeric: true });
+  });
+}
+
+function ordinaMesi(elenco) {
+  return elenco.slice().sort(function (a, b) {
+    if (a === "00") {
+      return 1;
+    }
+    if (b === "00") {
+      return -1;
+    }
+    return String(b).localeCompare(String(a), "it", { numeric: true });
   });
 }
 
 function annoChiuso(anno) {
   return chiusiAnno[anno] === true;
+}
+
+function meseChiuso(chiave) {
+  return chiusiMese[chiave] === true;
 }
 
 function mostraStato(testo) {
@@ -256,8 +313,17 @@ function riempiBottoneGruppo(bottone, aperto, etichettaGruppo, totale) {
 function applicaChiusure(forzaAperti) {
   corpoTabella.querySelectorAll("[data-anno]").forEach(function (riga) {
     const anno = riga.getAttribute("data-anno");
+    const mese = riga.getAttribute("data-mese");
     const tipo = riga.getAttribute("data-tipo");
-    const nascosta = !forzaAperti && tipo === "dati" && annoChiuso(anno);
+    let nascosta = false;
+    if (!forzaAperti) {
+      if (tipo !== "anno" && annoChiuso(anno)) {
+        nascosta = true;
+      }
+      if (tipo === "dati" && meseChiuso(chiaveGruppoMese(anno, mese))) {
+        nascosta = true;
+      }
+    }
     riga.classList.toggle("riga-nascosta", nascosta);
   });
 
@@ -267,19 +333,35 @@ function applicaChiusure(forzaAperti) {
     const aperto = forzaAperti || !annoChiuso(anno);
     riempiBottoneGruppo(bottone, aperto, anno, Number(riga.getAttribute("data-totale") || 0));
   });
+
+  corpoTabella.querySelectorAll(".riga-mese button").forEach(function (bottone) {
+    const riga = bottone.closest("tr");
+    const anno = riga.getAttribute("data-anno");
+    const mese = riga.getAttribute("data-mese");
+    const aperto = forzaAperti || !meseChiuso(chiaveGruppoMese(anno, mese));
+    riempiBottoneGruppo(
+      bottone,
+      aperto,
+      etichettaMese(mese),
+      Number(riga.getAttribute("data-totale") || 0)
+    );
+  });
 }
 
-function creaRigaGruppo(anno, totale) {
+function creaRigaGruppo(className, tipo, anno, mese, etichettaGruppo, totale) {
   const tr = document.createElement("tr");
-  tr.className = "riga-anno";
-  tr.setAttribute("data-tipo", "anno");
+  tr.className = className;
+  tr.setAttribute("data-tipo", tipo);
   tr.setAttribute("data-anno", anno);
   tr.setAttribute("data-totale", String(totale));
+  if (mese) {
+    tr.setAttribute("data-mese", mese);
+  }
   const td = document.createElement("td");
   td.colSpan = COLONNE_TABELLA.length;
   const bottone = document.createElement("button");
   bottone.type = "button";
-  riempiBottoneGruppo(bottone, true, anno, totale);
+  riempiBottoneGruppo(bottone, true, etichettaGruppo, totale);
   td.appendChild(bottone);
   tr.appendChild(td);
   return tr;
@@ -325,28 +407,49 @@ function disegnaTabella() {
     return;
   }
 
-  const gruppi = raggruppaPerAnno(visibili);
+  const gruppi = raggruppaPerAnnoEMese(visibili);
   const anni = ordinaAnni(Object.keys(gruppi));
 
   anni.forEach(function (anno) {
-    const righeAnno = gruppi[anno].slice().sort(confrontaPerAnnoEData);
-    corpoTabella.appendChild(creaRigaGruppo(anno, sommaImporti(righeAnno)));
+    const perMese = gruppi[anno];
+    const mesi = ordinaMesi(Object.keys(perMese));
+    const righeAnno = mesi.reduce(function (acc, mese) {
+      return acc.concat(perMese[mese]);
+    }, []);
+    corpoTabella.appendChild(
+      creaRigaGruppo("riga-anno", "anno", anno, "", anno, sommaImporti(righeAnno))
+    );
 
-    righeAnno.forEach(function (riga) {
-      const tr = document.createElement("tr");
-      tr.className = "riga-dati";
-      tr.setAttribute("data-tipo", "dati");
-      tr.setAttribute("data-anno", anno);
-      tr.setAttribute("data-id", String(riga.id || ""));
-      COLONNE_TABELLA.forEach(function (nome) {
-        const td = document.createElement("td");
-        td.textContent = testoCella(nome, riga);
-        if (nome === "Importo") {
-          td.className = "cella-importo";
-        }
-        tr.appendChild(td);
+    mesi.forEach(function (mese) {
+      const righeMese = perMese[mese].slice().sort(confrontaPerAnnoEData);
+      corpoTabella.appendChild(
+        creaRigaGruppo(
+          "riga-mese",
+          "mese",
+          anno,
+          mese,
+          etichettaMese(mese),
+          sommaImporti(righeMese)
+        )
+      );
+
+      righeMese.forEach(function (riga) {
+        const tr = document.createElement("tr");
+        tr.className = "riga-dati";
+        tr.setAttribute("data-tipo", "dati");
+        tr.setAttribute("data-anno", anno);
+        tr.setAttribute("data-mese", mese);
+        tr.setAttribute("data-id", String(riga.id || ""));
+        COLONNE_TABELLA.forEach(function (nome) {
+          const td = document.createElement("td");
+          td.textContent = testoCella(nome, riga);
+          if (nome === "Importo") {
+            td.className = "cella-importo";
+          }
+          tr.appendChild(td);
+        });
+        corpoTabella.appendChild(tr);
       });
-      corpoTabella.appendChild(tr);
     });
   });
 
@@ -389,11 +492,16 @@ if (campoRicerca) {
 }
 
 corpoTabella.addEventListener("click", function (evento) {
-  const bottoneGruppo = evento.target.closest(".riga-anno button");
+  const bottoneGruppo = evento.target.closest(".riga-anno button, .riga-mese button");
   if (bottoneGruppo) {
-    const anno = bottoneGruppo.closest("tr").getAttribute("data-anno");
+    const rigaGruppo = bottoneGruppo.closest("tr");
     const apertoOra = bottoneGruppo.getAttribute("aria-expanded") === "true";
-    chiusiAnno[anno] = apertoOra;
+    if (rigaGruppo.classList.contains("riga-mese")) {
+      chiusiMese[chiaveGruppoMese(rigaGruppo.getAttribute("data-anno"), rigaGruppo.getAttribute("data-mese"))] =
+        apertoOra;
+    } else {
+      chiusiAnno[rigaGruppo.getAttribute("data-anno")] = apertoOra;
+    }
     applicaChiusure(!!testoRicerca());
     return;
   }
