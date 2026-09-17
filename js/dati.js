@@ -8,6 +8,7 @@ const TABELLE = [
   { nome: "Compleanni", pagina: "compleanni.html" },
   { nome: "Entrate", pagina: "entrate.html" },
   { nome: "Evaquazioni", pagina: "evaquazioni.html" },
+  { nome: "LinkUtili", pagina: "link-utili.html" },
   { nome: "MemorieVarie", pagina: "memorie-varie.html" },
   { nome: "NotaVolante", pagina: "nota-volante.html" },
   { nome: "Ospedali", pagina: "ospedali.html" },
