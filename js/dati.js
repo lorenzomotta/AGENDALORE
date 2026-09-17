@@ -11,6 +11,7 @@ const TABELLE = [
   { nome: "MemorieVarie", pagina: "memorie-varie.html" },
   { nome: "NotaVolante", pagina: "nota-volante.html" },
   { nome: "Ospedali", pagina: "ospedali.html" },
+  { nome: "Parametri", pagina: "parametri.html" },
   { nome: "Password", pagina: "password.html" },
   { nome: "Rifornimenti", pagina: "rifornimenti.html" },
   { nome: "Sogni", pagina: "sogni.html" },
