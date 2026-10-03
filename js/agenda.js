@@ -47,6 +47,7 @@ const dettaglioEsecutore = document.getElementById("dettaglio-esecutore");
 const dettaglioNote = document.getElementById("dettaglio-note");
 const dettaglioTelefono = document.getElementById("dettaglio-telefono");
 const dettaglioEmail = document.getElementById("dettaglio-email");
+const dettaglioGoogle = document.getElementById("dettaglio-google");
 const dettaglioChiudi = document.getElementById("dettaglio-chiudi");
 const dettaglioModifica = document.getElementById("dettaglio-modifica");
 const dettaglioDuplica = document.getElementById("dettaglio-duplica");
@@ -75,6 +76,8 @@ const campoTipo = document.getElementById("tipo-appuntamento");
 const listaTipo = document.getElementById("lista-tipo-appuntamento");
 const campoPagamento = document.getElementById("pagamento");
 const campoTutti = document.getElementById("tutti");
+const campoGoogle = document.getElementById("su-google");
+const dettaglioGoogleStato = document.getElementById("dettaglio-google-stato");
 const erroreForm = document.getElementById("errore-form");
 const bottoneAnnulla = document.getElementById("bottone-annulla");
 const dettaglioVisibilita = document.getElementById("dettaglio-visibilita");
@@ -698,9 +701,19 @@ function aggiornaPulsantiVista() {
   });
 }
 
+function classeVoceAppuntamento(elemento, base) {
+  if (elemento.eCompleanno) {
+    return base + " compleanno";
+  }
+  if (idEventoGoogle(elemento)) {
+    return base + " su-google";
+  }
+  return base;
+}
+
 function cardAppuntamento(elemento) {
   const li = document.createElement("li");
-  li.className = elemento.eCompleanno ? "card-appuntamento compleanno" : "card-appuntamento";
+  li.className = classeVoceAppuntamento(elemento, "card-appuntamento");
   li.setAttribute("data-id", elemento.id);
 
   const h2 = document.createElement("h2");
@@ -754,7 +767,7 @@ function cardAppuntamento(elemento) {
 
 function rigaGiorno(elemento) {
   const li = document.createElement("li");
-  li.className = elemento.eCompleanno ? "riga-appuntamento compleanno" : "riga-appuntamento";
+  li.className = classeVoceAppuntamento(elemento, "riga-appuntamento");
   li.setAttribute("data-id", elemento.id);
   li.setAttribute("role", "button");
   li.tabIndex = 0;
@@ -816,6 +829,78 @@ function testoQuando(elemento) {
   return ora ? data + " alle " + ora : data;
 }
 
+function dataCompattaGoogle(iso) {
+  return normalizzaData(iso).replace(/-/g, "");
+}
+
+function orarioCompattoGoogle(ora) {
+  const pezzi = formattaOra(ora).split(":");
+  const ore = String(pezzi[0] || "00").padStart(2, "0");
+  const minuti = String(pezzi[1] || "00").padStart(2, "0");
+  return "T" + ore + minuti + "00";
+}
+
+function fineDopoUnOra(iso, ora) {
+  const data = daISO(iso);
+  const pezzi = formattaOra(ora).split(":");
+  data.setHours(Number(pezzi[0] || 0), Number(pezzi[1] || 0), 0, 0);
+  data.setHours(data.getHours() + 1);
+  return (
+    dataCompattaGoogle(aISO(data)) +
+    "T" +
+    String(data.getHours()).padStart(2, "0") +
+    String(data.getMinutes()).padStart(2, "0") +
+    "00"
+  );
+}
+
+function giornoDopoCompatto(iso) {
+  const data = daISO(iso);
+  data.setDate(data.getDate() + 1);
+  return dataCompattaGoogle(aISO(data));
+}
+
+function rigaSePiena(etichetta, valore) {
+  const testo = String(valore || "").trim();
+  return testo ? etichetta + ": " + testo : "";
+}
+
+function dettagliGoogle(elemento) {
+  const righe = [
+    rigaSePiena("Tipo", testoTipoAppuntamento(elemento)),
+    rigaSePiena("Interlocutore", testoInterlocutore(elemento)),
+    rigaSePiena("Esecutore", testoEsecutore(elemento)),
+    rigaSePiena("Telefono", valoreColonna(elemento, "Telefono")),
+    rigaSePiena("Email", valoreColonna(elemento, "email")),
+  ];
+  if (ePagamento(elemento)) {
+    righe.push(rigaSePiena("Importo", formattaImporto(valoreColonna(elemento, "Importo"))));
+    righe.push(rigaSePiena("Stato pagamento", valoreColonna(elemento, "StatoPagamento")));
+  }
+  if (elemento.note) {
+    righe.push(String(elemento.note).trim());
+  }
+  return righe.filter(Boolean).join("\n");
+}
+
+function urlGoogleCalendar(elemento) {
+  const ora = formattaOra(elemento.ora);
+  const inizio = dataCompattaGoogle(elemento.data);
+  const date = ora
+    ? inizio + orarioCompattoGoogle(ora) + "/" + fineDopoUnOra(elemento.data, ora)
+    : inizio + "/" + giornoDopoCompatto(elemento.data);
+  const parametri = new URLSearchParams();
+  parametri.set("action", "TEMPLATE");
+  parametri.set("text", elemento.titolo || "Appuntamento");
+  parametri.set("dates", date);
+  parametri.set("ctz", "Europe/Rome");
+  const dettagli = dettagliGoogle(elemento);
+  if (dettagli) {
+    parametri.set("details", dettagli);
+  }
+  return "https://calendar.google.com/calendar/render?" + parametri.toString();
+}
+
 function apriDettaglio(id) {
   const elemento = trovaAppuntamento(id);
   if (!elemento) {
@@ -840,6 +925,11 @@ function apriDettaglio(id) {
   dettaglioNote.textContent = elemento.note ? elemento.note : "—";
   dettaglioTelefono.textContent = valoreColonna(elemento, "Telefono") || "—";
   dettaglioEmail.textContent = valoreColonna(elemento, "email") || "—";
+  const collegatoGoogle = !elemento.eCompleanno && Boolean(idEventoGoogle(elemento));
+  dettaglioGoogleStato.hidden = !collegatoGoogle;
+  const testoPulsanteGoogle =
+    collegatoGoogle && googleCalendarConfigurato() ? "Aggiorna su Google" : "Metti su Google";
+  dettaglioGoogle.textContent = testoPulsanteGoogle;
   dettaglioAzioni.hidden = !eMio(elemento);
   dialogoDettaglio.showModal();
 }
@@ -1074,7 +1164,11 @@ async function caricaAppuntamenti() {
 
   ricordaNomiColonne(data);
   cacheAppuntamenti = (data || []).map(function (elemento) {
-    return Object.assign({}, elemento, { data: normalizzaData(elemento.data) });
+    const copia = Object.assign({}, elemento, { data: normalizzaData(elemento.data) });
+    if (!copia.google_event_id) {
+      copia.google_event_id = idEventoGoogle(copia);
+    }
+    return copia;
   });
   disegnaVista();
 }
@@ -1108,6 +1202,7 @@ function apriDialogo(appuntamento, duplica) {
     campoTelefono.value = valoreColonna(appuntamento, "Telefono");
     campoEmail.value = valoreColonna(appuntamento, "email");
     campoTutti.checked = eTutti(appuntamento);
+    campoGoogle.checked = duplica ? false : Boolean(idEventoGoogle(appuntamento));
     campoPagamento.checked = ePagamento(appuntamento);
     const stato = valoreColonna(appuntamento, "StatoPagamento").toUpperCase();
     campoImporto.value = valoreColonna(appuntamento, "Importo");
@@ -1125,6 +1220,7 @@ function apriDialogo(appuntamento, duplica) {
     campoTelefono.value = "";
     campoEmail.value = "";
     campoTutti.checked = false;
+    campoGoogle.checked = false;
     campoPagamento.checked = false;
     campoImporto.value = "";
     campoStatoPagamento.value = "PAGARE";
@@ -1225,6 +1321,42 @@ dettaglioChiudi.addEventListener("click", function () {
   dialogoDettaglio.close();
 });
 
+dettaglioGoogle.addEventListener("click", function () {
+  const elemento = trovaAppuntamento(idDettaglio);
+  if (!elemento) {
+    return;
+  }
+  if (elemento.eCompleanno || !googleCalendarConfigurato()) {
+    window.open(urlGoogleCalendar(elemento), "_blank", "noopener");
+    return;
+  }
+  const tokenPromessa = chiediTokenGoogle();
+  dettaglioGoogle.disabled = true;
+  tokenPromessa
+    .then(function (token) {
+      return sincronizzaAppuntamentoSuGoogle(elemento, token);
+    })
+    .then(function (idEvento) {
+      return memorizzaIdEventoGoogle(elemento.id, idEvento).then(function () {
+        elemento.google_event_id = idEvento;
+        dettaglioGoogle.textContent = "Aggiornato su Google";
+        dettaglioGoogleStato.hidden = false;
+        document.querySelectorAll("[data-id]").forEach(function (riga) {
+          if (String(riga.getAttribute("data-id")) === String(elemento.id)) {
+            riga.classList.add("su-google");
+          }
+        });
+      });
+    })
+    .catch(function (error) {
+      dettaglioGoogle.textContent = idEventoGoogle(elemento) ? "Aggiorna su Google" : "Metti su Google";
+      stato.textContent = messaggioErroreGoogle(error);
+    })
+    .then(function () {
+      dettaglioGoogle.disabled = false;
+    });
+});
+
 dettaglioModifica.addEventListener("click", function () {
   const elemento = trovaAppuntamento(idDettaglio);
   if (!elemento || !eMio(elemento)) {
@@ -1253,6 +1385,20 @@ async function eseguiCancellazione() {
   if (!id || String(id).indexOf("compleanno-") === 0) {
     return;
   }
+  const elemento = trovaAppuntamento(id);
+  const idEvento = elemento ? idEventoGoogle(elemento) : "";
+  const tokenPromessa = idEvento && googleCalendarConfigurato() ? chiediTokenGoogle() : null;
+  if (tokenPromessa) {
+    try {
+      const token = await tokenPromessa;
+      await eliminaEventoGoogle(idEvento, token);
+      dimenticaIdEventoGoogle(id);
+    } catch (error) {
+      dialogoCancella.close();
+      stato.textContent = "Non ho cancellato l'appuntamento. " + messaggioErroreGoogle(error);
+      return;
+    }
+  }
   const cancellazione = await getSupabase().from("appuntamenti").delete().eq("id", id);
   if (cancellazione.error) {
     stato.textContent = messaggioErrore(cancellazione.error);
@@ -1264,6 +1410,9 @@ async function eseguiCancellazione() {
     dialogoDettaglio.close();
   }
   await caricaAppuntamenti();
+  if (tokenPromessa) {
+    stato.textContent = "Cancellato anche su Google Calendar.";
+  }
 }
 
 dettaglioCancella.addEventListener("click", function () {
@@ -1374,6 +1523,12 @@ async function salvaAppuntamento() {
     return;
   }
 
+  const precedente = campoId.value ? trovaAppuntamento(campoId.value) : null;
+  const idEventoNota = precedente ? idEventoGoogle(precedente) : "";
+  const vuoleGoogle = campoGoogle.checked;
+  const tokenPromessa =
+    googleCalendarConfigurato() && (vuoleGoogle || idEventoNota) ? chiediTokenGoogle() : null;
+
   const payload = {
     titolo: titolo,
     data: data,
@@ -1393,9 +1548,13 @@ async function salvaAppuntamento() {
 
   let risultato;
   if (campoId.value) {
-    risultato = await getSupabase().from("appuntamenti").update(payload).eq("id", campoId.value);
+    risultato = await getSupabase()
+      .from("appuntamenti")
+      .update(payload)
+      .eq("id", campoId.value)
+      .select("id");
   } else {
-    risultato = await getSupabase().from("appuntamenti").insert(payload);
+    risultato = await getSupabase().from("appuntamenti").insert(payload).select("id");
   }
 
   if (risultato.error && /column|schema|tutti|interlocutore|esecutore|tipoappuntamento|telefono|email|importo|statopagamento|pagamento/i.test(String(risultato.error.message || ""))) {
@@ -1430,9 +1589,13 @@ async function salvaAppuntamento() {
     payload[altraStatoPagamento] = statoPagamento;
     payload[altraPagamento] = pagamento;
     if (campoId.value) {
-      risultato = await getSupabase().from("appuntamenti").update(payload).eq("id", campoId.value);
+      risultato = await getSupabase()
+        .from("appuntamenti")
+        .update(payload)
+        .eq("id", campoId.value)
+        .select("id");
     } else {
-      risultato = await getSupabase().from("appuntamenti").insert(payload);
+      risultato = await getSupabase().from("appuntamenti").insert(payload).select("id");
     }
     if (!risultato.error) {
       nomeColonnaTutti = altraTutti;
@@ -1448,8 +1611,61 @@ async function salvaAppuntamento() {
   }
 
   if (risultato.error) {
+    if (tokenPromessa) {
+      tokenPromessa.catch(function () {});
+    }
     mostraErroreForm(messaggioErrore(risultato.error));
     return;
+  }
+
+  const rigaSalvata = risultato.data && risultato.data[0];
+  const idSalvato = (rigaSalvata && rigaSalvata.id) || campoId.value;
+  let avvisoGoogle = "";
+  if (vuoleGoogle && tokenPromessa) {
+    try {
+      const token = await tokenPromessa;
+      const idEvento = await sincronizzaAppuntamentoSuGoogle(
+        {
+          id: idSalvato,
+          titolo: titolo,
+          data: data,
+          ora: ora || "",
+          note: note,
+          TipoAppuntamento: tipo,
+          Interlocutore: interlocutore || "",
+          Esecutore: esecutore || "",
+          Telefono: telefono || "",
+          email: email || "",
+          Importo: mostraPagamento ? campoImporto.value : "",
+          StatoPagamento: statoPagamento || "",
+          Pagamento: pagamento,
+          google_event_id: idEventoNota,
+        },
+        token
+      );
+      await memorizzaIdEventoGoogle(idSalvato, idEvento);
+      avvisoGoogle = "Salvato anche su Google Calendar.";
+    } catch (error) {
+      avvisoGoogle = "Appuntamento salvato. " + messaggioErroreGoogle(error);
+    }
+  } else if (vuoleGoogle) {
+    avvisoGoogle =
+      "Appuntamento salvato solo nell'agenda. Il collegamento con Google non è ancora pronto.";
+  } else if (idEventoNota) {
+    try {
+      if (tokenPromessa) {
+        const token = await tokenPromessa;
+        await eliminaEventoGoogle(idEventoNota, token);
+      }
+      await scollegaIdEventoGoogle(idSalvato);
+      avvisoGoogle = tokenPromessa
+        ? "Salvato nell'agenda e tolto da Google Calendar."
+        : "Salvato nell'agenda. Non è più segnato come presente su Google Calendar.";
+    } catch (error) {
+      avvisoGoogle = "Appuntamento salvato. " + messaggioErroreGoogle(error);
+    }
+  } else if (tokenPromessa) {
+    tokenPromessa.catch(function () {});
   }
 
   if (dialogoTutti.open) {
@@ -1457,6 +1673,9 @@ async function salvaAppuntamento() {
   }
   dialogo.close();
   await caricaAppuntamenti();
+  if (avvisoGoogle) {
+    stato.textContent = avvisoGoogle;
+  }
 }
 
 formAppuntamento.addEventListener("submit", function (evento) {

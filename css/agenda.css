@@ -391,6 +391,19 @@ body {
   background: #fff6e8;
 }
 
+.riga-appuntamento.su-google {
+  background: #d6ebfa;
+}
+
+.riga-appuntamento.su-google:active {
+  background: #c3e4f8;
+}
+
+.riga-appuntamento.su-google .ora-riga,
+.riga-appuntamento.su-google .titolo-riga {
+  color: #145a86;
+}
+
 .riga-appuntamento.compleanno .titolo-riga {
   color: #9a5b12;
 }
@@ -471,6 +484,16 @@ body {
   text-align: right;
 }
 
+#dettaglio-google-stato {
+  margin: -4px 0 12px;
+  color: #145a86;
+  font-weight: 700;
+}
+
+#dettaglio-google-stato[hidden] {
+  display: none;
+}
+
 .dettaglio-tipo {
   margin: 0 0 12px;
   font-size: 1.25rem;
@@ -510,6 +533,10 @@ body {
 
 .card-appuntamento.compleanno {
   background: #fff6e8;
+}
+
+.card-appuntamento.su-google {
+  background: #d6ebfa;
 }
 
 .card-appuntamento h2 {
@@ -633,6 +660,17 @@ body {
   margin: 0;
 }
 
+.bottone-google {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  margin: 0 0 8px;
+  box-sizing: border-box;
+  text-align: center;
+  text-decoration: none;
+}
+
 .combo {
   position: relative;
 }
@@ -694,6 +732,10 @@ body {
   height: 22px;
   min-height: 0;
   accent-color: #1e4d28;
+}
+
+#su-google {
+  accent-color: #1a73c7;
 }
 
 .riga-tipo-pagamento {

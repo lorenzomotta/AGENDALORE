@@ -13,7 +13,7 @@
       href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="css/agenda.css?v=pagamento-label" />
+    <link rel="stylesheet" href="css/agenda.css?v=scelta-google" />
   </head>
   <body>
     <header class="barra-superiore">
@@ -79,6 +79,7 @@
           <p id="dettaglio-quando"></p>
           <p id="dettaglio-visibilita"></p>
         </div>
+        <p id="dettaglio-google-stato" hidden>Anche su Google Calendar</p>
         <p id="riga-dettaglio-importo" class="riga-dettaglio" hidden>
           <span class="etichetta-dettaglio">Importo:</span>
           <span id="dettaglio-importo"></span>
@@ -114,6 +115,9 @@
         </p>
       </div>
       <div class="dialogo-footer">
+        <button id="dettaglio-google" class="bottone-secondario bottone-google" type="button">
+          Metti su Google
+        </button>
         <div id="dettaglio-azioni" class="azioni-dialogo azioni-dettaglio">
           <button id="dettaglio-cancella" class="bottone-pericolo" type="button">Cancella</button>
           <button id="dettaglio-duplica" class="bottone-secondario" type="button">Duplica</button>
@@ -226,6 +230,10 @@
             <input id="tutti" name="tutti" type="checkbox" />
             <span>Tutti (visibile a ogni utente dell’app)</span>
           </label>
+          <label class="campo campo-check">
+            <input id="su-google" name="su-google" type="checkbox" />
+            <span>Salva anche su Google Calendar</span>
+          </label>
           <p id="errore-form" class="messaggio errore" hidden></p>
         </div>
         <div class="dialogo-footer">
@@ -254,8 +262,10 @@
     </dialog>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://accounts.google.com/gsi/client"></script>
     <script src="js/config.js"></script>
     <script src="js/supabase-client.js"></script>
-    <script src="js/agenda.js?v=pagamento"></script>
+    <script src="js/google-calendar.js?v=scelta-google"></script>
+    <script src="js/agenda.js?v=scelta-google"></script>
   </body>
 </html>

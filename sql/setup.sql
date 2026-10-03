@@ -24,6 +24,7 @@ create table if not exists public.appuntamenti (
   email text not null default '',
   "Importo" numeric,
   "StatoPagamento" text,
+  google_event_id text,
   created_at timestamptz not null default now()
 );
 
