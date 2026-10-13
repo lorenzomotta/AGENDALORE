@@ -25,6 +25,7 @@ let cacheRighe = [];
 let inModifica = false;
 let utenteId = null;
 let nomeColonnaUtente = null;
+let rigaAperta = null;
 const chiusiGenere = {};
 
 function tabellaApi() {
@@ -61,6 +62,25 @@ function trovaColonna(nomeLogico) {
   );
 }
 
+function nomeColonnaCompatto(nome) {
+  return String(nome || "")
+    .toLowerCase()
+    .replace(/[_\s-]/g, "");
+}
+
+function trovaColonnaCompatta(nomi) {
+  for (let i = 0; i < nomi.length; i += 1) {
+    const cercato = nomeColonnaCompatto(nomi[i]);
+    const trovata = colonne.find(function (nome) {
+      return nomeColonnaCompatto(nome) === cercato;
+    });
+    if (trovata) {
+      return trovata;
+    }
+  }
+  return null;
+}
+
 function colonneDaRighe(righe) {
   const viste = {};
   (righe || []).forEach(function (riga) {
@@ -74,22 +94,22 @@ function colonneDaRighe(righe) {
 
 function eColonnaNascosta(nome) {
   const basso = String(nome).toLowerCase();
+  const compatto = nomeColonnaCompatto(nome);
   return (
-    basso === "id" ||
     basso === "created_at" ||
     basso === "user_id" ||
-    basso === "idmemorievarie" ||
-    basso === "idmemoria"
+    compatto === "id" ||
+    compatto === "idmemorievarie" ||
+    compatto === "idmemoria" ||
+    nome === colonnaId()
   );
 }
 
 function colonnaId() {
   return (
-    trovaColonna("ID") ||
+    trovaColonnaCompatta(["IDMEMORIEVARIE", "IdMemorieVarie", "idmemoria"]) ||
     trovaColonna("id") ||
-    trovaColonna("IDMEMORIEVARIE") ||
-    trovaColonna("IdMemorieVarie") ||
-    "ID"
+    "id"
   );
 }
 
@@ -497,6 +517,7 @@ function leggiForm() {
 function apriDialogo(riga, modificaSubito) {
   mostraErroreForm("");
   inModifica = !!modificaSubito;
+  rigaAperta = riga && Object.keys(riga).length ? riga : null;
   campoId.value = riga ? String(idDellaRiga(riga) || "") : "";
   costruisciCampi(riga);
   impostaCampiBloccati(!inModifica);
@@ -573,6 +594,7 @@ function disegnaTabella() {
       tr.className = "riga-dati";
       tr.setAttribute("data-tipo", "dati");
       tr.setAttribute("data-id", String(idDellaRiga(riga)));
+      tr.setAttribute("data-indice", String(cacheRighe.indexOf(riga)));
       tr.setAttribute("data-genere", nomeGruppo);
       colonneTabella().forEach(function (nome) {
         const td = document.createElement("td");
@@ -633,12 +655,9 @@ if (campoRicerca) {
 }
 
 bottoneAnnulla.addEventListener("click", function () {
-  if (inModifica && campoId.value) {
-    const originale = cacheRighe.find(function (riga) {
-      return String(idDellaRiga(riga)) === String(campoId.value);
-    });
+  if (inModifica && rigaAperta) {
     inModifica = false;
-    costruisciCampi(originale || {});
+    costruisciCampi(rigaAperta);
     impostaCampiBloccati(true);
     aggiornaBarraAzioni();
     mostraErroreForm("");
@@ -683,11 +702,29 @@ corpoTabella.addEventListener("click", function (evento) {
   if (!rigaDati || rigaDati.classList.contains("riga-nascosta")) {
     return;
   }
-  const id = rigaDati.getAttribute("data-id");
-  const trovata = cacheRighe.find(function (elemento) {
-    return String(idDellaRiga(elemento)) === String(id);
-  });
-  apriDialogo(trovata || { id: id }, false);
+
+  const indiceGrezzo = rigaDati.getAttribute("data-indice");
+  const indice = Number(indiceGrezzo);
+  let trovata = null;
+  if (
+    indiceGrezzo !== null &&
+    indiceGrezzo !== "" &&
+    Number.isInteger(indice) &&
+    indice >= 0 &&
+    indice < cacheRighe.length
+  ) {
+    trovata = cacheRighe[indice];
+  }
+  if (!trovata) {
+    const id = rigaDati.getAttribute("data-id");
+    trovata = cacheRighe.find(function (elemento) {
+      return String(idDellaRiga(elemento)) === String(id);
+    });
+  }
+  if (!trovata) {
+    return;
+  }
+  apriDialogo(trovata, false);
 });
 
 formRiga.addEventListener("submit", async function (evento) {
